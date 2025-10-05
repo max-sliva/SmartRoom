@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SmartRoom</string>
+    <string name="helloWord">Hello</string>
+    <string name="jalousie">Jalousie</string>
+    <string name="Window">Window</string>
+    <string name="WindowClosed">Closed</string>
+    <string name="WindowOpened">Opened</string>
+</resources>

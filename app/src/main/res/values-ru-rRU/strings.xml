@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Умное помещение</string>
+    <string name="helloWord">Привет</string>
+    <string name="jalousie">Жалюзи</string>
+    <string name="Window">Окно</string>
+    <string name="WindowClosed">Закрыто</string>
+    <string name="WindowOpened">Открыто</string>
+</resources>
