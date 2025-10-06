@@ -4,19 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -54,24 +54,30 @@ fun MainColumn(name: String, modifier: Modifier = Modifier) {
 ////                .padding(start = 10.dp)
 //        ){
             val jalousie = stringResource(R.string.jalousie)
-            ToggleBtn(jalousie)
+            var jalousieChecked = remember { mutableStateOf(false) }
+            ToggleBtn(jalousie, jalousieChecked, Pair(stringResource(R.string.jalousieUp),stringResource(R.string.jalousieDown)))
             val window = stringResource(R.string.Window)
-            var checked = remember { mutableStateOf(true) }
-            ToggleBtn(window, checked)
+            var windowChecked = remember { mutableStateOf(true) }
+            ToggleBtn(window, windowChecked, Pair(stringResource(R.string.WindowClosed),stringResource(R.string.WindowOpened)))
 //        }
     }
 }
 
 @Composable
-private fun ToggleBtn(jalousie: String, checked: MutableState<Boolean> = mutableStateOf(false)) {
-    //todo добавить в качестве параметра пару значений для переключения при нажатии
+private fun ToggleBtn(
+    name: String,
+    checked: MutableState<Boolean> =  mutableStateOf(false),
+    objectStatus: Pair<String, String>
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier
-                .padding(start = 10.dp)
+//                .padding(start = 10.dp)
+                .fillMaxWidth()
     ) {
         Text(
-            text = "$jalousie"
+            text = "$name"
         )
 //        var checked by remember { mutableStateOf(false) }
         Switch(
@@ -82,7 +88,7 @@ private fun ToggleBtn(jalousie: String, checked: MutableState<Boolean> = mutable
             modifier = Modifier
                 .padding(start = 10.dp)
         )
-//        Text() //todo добавить текст с выбором из массива с нужными значениями в зависимости от кнопки
+        Text(text = if (checked.value) objectStatus.second else objectStatus.first) //todo добавить текст с выбором из массива с нужными значениями в зависимости от кнопки
     }
 }
 

@@ -6,4 +6,6 @@
     <string name="Window">Окно</string>
     <string name="WindowClosed">Закрыто</string>
     <string name="WindowOpened">Открыто</string>
+    <string name="jalousieUp">Подняты</string>
+    <string name="jalousieDown">Опущены</string>
 </resources>

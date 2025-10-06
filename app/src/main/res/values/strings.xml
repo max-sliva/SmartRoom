@@ -5,4 +5,6 @@
     <string name="Window">Window</string>
     <string name="WindowClosed">Closed</string>
     <string name="WindowOpened">Opened</string>
+    <string name="jalousieUp">Up</string>
+    <string name="jalousieDown">Down</string>
 </resources>
