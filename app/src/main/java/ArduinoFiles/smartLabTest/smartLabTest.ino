@@ -1,46 +1,63 @@
+#include "SmartWindow.h"
 int vent1 = 3;
 int vent2 = 4;
 int motor1 = 5;
 int motor2 = 6;
 int led = 7;
-int windowOpenedVal = 30, windowClosedVal = 900, windowCurVal;
+int windowOpenedVal = 30, windowClosedVal = 900, windowCurVal = 600;
 bool windowIsOpened = false;
 //bool testMode = true;
 //#define DEBUG_MODE
 
 #ifdef DEBUG_MODE
-  #define curSerial Serial
-  #define mode "TestMode"
+#define curSerial Serial
+#define mode "TestMode"
 #else
-  #define curSerial Serial1
-  #define mode "WorkMode"
+#define curSerial Serial1
+#define mode "WorkMode"
 #endif
 
-void windowWork(String key, String val){
-  //сделать if для двух окон
-  if (val=="open" && !windowIsOpened){
-    
-    if(windowCurVal > windowOpenedVal){
-      
+SmartWindow windowLeft(motor1, motor2, A0, windowOpenedVal, windowClosedVal);
+SmartWindow windowRight;
+
+void windowWork(SmartWindow &myWindow, String key, String val) {
+   Serial.println("in windowWork..");
+   Serial.print("myWindow.isOpened()");
+   Serial.print(" = ");
+   Serial.println(myWindow.isOpened());
+   
+  if (val == "open" && !myWindow.isOpened()) {
+    if (myWindow.getCurVal() > myWindow.getOpenedVal()) {
+      myWindow.open();
+    }
+  }
+  if (val == "close" && myWindow.isOpened()) {
+    Serial.println("in closing 1..");
+    if (myWindow.getCurVal() < myWindow.getClosedVal()) {
+      Serial.println("in closing 2..");
+      myWindow.close();
     }
   }
 }
 
-void doCommand(String key, String val){
-  if (key=="vent"){
-    digitalWrite(vent1,(val=="on")? HIGH : LOW);
-  } else if (key=="windowLeft"){
-    windowWork(key, val);
-  } else if (key=="windowRight"){
-    windowWork(key, val);
-  } else if (key=="door"){
-    
-  } else if (key=="led"){
-    analogWrite(led,val.toInt());
-  }  
+void doCommand(String key, String val) {
+  if (key == "vent") {
+    digitalWrite(vent1, (val == "on") ? HIGH : LOW);
+  } else if (key == "windowLeft") {
+    Serial.println("windowLeft work");
+    windowWork(windowLeft, key, val);
+  } else if (key == "windowRight") {
+    windowWork(windowRight, key, val);
+  } else if (key == "door") {
+
+  } else if (key == "led") {
+    if (val == "on") digitalWrite(led, HIGH);
+    else if (val == "off") digitalWrite(led, LOW);
+    else analogWrite(led, val.toInt());
+  }
 }
-    
-void setup(){
+
+void setup() {
   pinMode(led, OUTPUT);
   pinMode(motor1, OUTPUT);
   pinMode(motor2, OUTPUT);
@@ -51,24 +68,40 @@ void setup(){
   Serial.begin(9600);
   Serial1.begin(9600);
   Serial.println(mode);
-  windowCurVal = analogRead(A0);
+  windowLeft.setCurVal(analogRead(A0));
+  if (windowLeft.getCurVal() < windowRight.getOpenedVal()) windowLeft.setOpened(true);
+  else windowLeft.setOpened(false);
   Serial.print("windowCurVal");
   Serial.print(" : ");
-  Serial.println(windowCurVal);
+  Serial.println(windowLeft.getCurVal());
+  Serial.print("window status");
+  Serial.print(" : ");
+  String windowStatus = "";
+  if (windowLeft.isOpened()) windowStatus = "opened";
+  else windowStatus = "closed";
+  Serial.println(windowStatus);
 }
-void loop(){
-  if (curSerial.available()){
-//    String str = curSerial.readString();
+void loop() {
+  //todo сделать режим настройки, в котором можно менять параметры открытия окон и дверей (запись в EEPROM)
+  if (curSerial.available()) {
+    //    String str = curSerial.readString();
     String key = curSerial.readStringUntil(':');
     String val = curSerial.readStringUntil('\n');
-    
+
     Serial.print(key);
     Serial.print(" : ");
     Serial.println(val);
     Serial.println();
     doCommand(key, val);
   }
-  windowCurVal = analogRead(A0);
-  if (windowCurVal < windowClosedVal) windowIsOpened = true;
-  else  windowIsOpened = fals;
+  windowLeft.setCurVal(analogRead(A0));
+  int potValue = analogRead(A0);
+  if (abs(windowCurVal - potValue) >= 10) {
+    Serial.print("potValue = ");
+    Serial.println(potValue);
+    windowCurVal = potValue;
+  }
+  // if (windowLeft.getCurVal() < windowRight.getOpenedVal()) windowLeft.setOpened(true);
+  // else windowLeft.setOpened(false);
+  delay(15);
 }
