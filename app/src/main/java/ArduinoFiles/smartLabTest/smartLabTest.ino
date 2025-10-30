@@ -25,7 +25,9 @@ void windowWork(SmartWindow &myWindow, String key, String val) {
    Serial.print("myWindow.isOpened()");
    Serial.print(" = ");
    Serial.println(myWindow.isOpened());
-   
+  Serial.print("myWindow.getCurVal() ");
+   Serial.print(" = ");
+   Serial.println(myWindow.getCurVal() );
   if (val == "open" && !myWindow.isOpened()) {
     if (myWindow.getCurVal() > myWindow.getOpenedVal()) {
       myWindow.open();
@@ -100,6 +102,8 @@ void loop() {
     Serial.print("potValue = ");
     Serial.println(potValue);
     windowCurVal = potValue;
+      if (windowLeft.getCurVal()>=windowLeft.getClosedVal()) windowLeft.setOpened(false);
+      else windowLeft.setOpened(true);
   }
   // if (windowLeft.getCurVal() < windowRight.getOpenedVal()) windowLeft.setOpened(true);
   // else windowLeft.setOpened(false);

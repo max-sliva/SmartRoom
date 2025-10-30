@@ -9,6 +9,7 @@ private:
   int curVal;
   bool opened;
 public:
+//todo добавить получение статуса (открыто/закрыто)
   const int &getOpenedVal() const {
     return openedVal;
   }
@@ -31,6 +32,8 @@ public:
 
   void setCurVal(const int &curVal) {
     SmartWindow::curVal = curVal;
+    if (curVal<SmartWindow::closedVal) opened = true;
+    else opened = false;
   }
 
   bool isOpened() const {
