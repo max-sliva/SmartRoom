@@ -1,8 +1,8 @@
 #include "SmartWindow.h"
 int vent1 = 3;
 int vent2 = 4;
-int motor1 = 5;
-int motor2 = 6;
+int motor1 = 6;
+int motor2 = 7;
 int led = 7;
 int windowOpenedVal = 30, windowClosedVal = 900, windowCurVal = 600;
 bool windowIsOpened = false;

@@ -27,25 +27,61 @@ public:
     closedValue = _closedValue;
   }
 
-  void updateValue() {
+  short int updateValue() {
     currentValue = analogRead(valuePin);
+    return currentValue;
   }
 
-  void updateValueFine(byte tolerance = 4) {
+  short int updateValueFine(byte tolerance = 4) {
     short int newValue = analogRead(valuePin);
     if (abs(newValue - currentValue) > tolerance) {
-        currentValue = newValue;
+        currentValue = newValue; 
     }
+    return currentValue;
   }
 
   /**
     Procedure to find Boundaries value, by turning element until it can't in both directions
     and the final user input in the Serial which position is opened
   */
-  void findBoundaries(short int interruptionTime = 300) {
-    if (Serial) {
-        
+  byte findBoundaries(short int interruptionTime = 300, byte speed) {
+    if (!Serial) {
+      return 1;
     }
+    Serial.println("Starting finding boundaries...");
+    analogWrite(speed,openPin);
+    long start = millis();
+    short int value = currentValue;
+    while() {
+      if (value != updateValueFine()) {
+        start = millis();
+        value = currentValue;
+      }
+      else {
+        // exit point from infinite while()
+        if (millis()-start == interruptionTime) {
+          openedValue = value;
+          break;
+        }
+      }
+    }
+    analogWrite(0,openPin);
+    analogWrite(speed,closePin);
+    value = currentValue
+    while() {
+      if (value != updateValueFine()) {
+        start = millis();
+        value = currentValue;
+      }
+      else {
+        // exit point from infinite while()
+        if (millis()-start == interruptionTime) {
+          closedValue = value;
+          break;
+        }
+      }
+    }
+    return 0;
   }
 
 };

@@ -45,7 +45,7 @@ public:
   }
 
   void open() {
-    const byte TOLARATE_VALUE = 16
+    const byte TOLARATE_VALUE = 16;
     digitalWrite(motorPin1, HIGH);
     //digitalWrite(motorPin2, LOW);
     while (curVal > openedVal) {
