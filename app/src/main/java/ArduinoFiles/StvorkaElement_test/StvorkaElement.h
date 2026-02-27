@@ -7,7 +7,7 @@ private:
   short openedValue;    //0 - 1023
   short closedValue;    //0 - 1023
   short currentValue;   //0 - 1023
-  bool opened;      //Variable that shows this window is opened or not
+  bool swapped;      //Variable that shows this window is opened or not
   String name;      //NAME OF THE OBJECT IN THE NEXTION DISPLAY, USING CAREFULLY
 public:
   StvorkaElement(byte _openPin, byte _closePin, byte _valuePin, String _name = "")
@@ -19,7 +19,7 @@ public:
     openedValue = 1023;
     closedValue = 0;
     currentValue = 0;
-    opened = false;
+    swapped = false;
   }
 
   void setBoundaries(short _openedValue, short _closedValue) {
@@ -103,6 +103,10 @@ public:
       Serial.println(openPin);
       Serial.print("closePin = ");
       Serial.println(closePin);
+      swapped = true;
+    }
+    else {
+      swapped = false;
     }
     Serial.print("openedValue = ");
     Serial.println(openedValue);
@@ -110,6 +114,43 @@ public:
     Serial.println(closedValue);
     Serial.println("Boundaries was adjusted!");
     return 0;
+  }
+
+  /**
+    Procedures to move stvorka element to the position readed by its potentiometr
+  */
+  short moveStvorkaTo(short targetValue, byte speed) {
+    if (checkValueWithinBoundaries(targetValue)) {
+      if (currentValue < targetValue) {
+        
+      }
+      else {
+        if (currentValue > targetValue) {
+
+        }
+      }
+    }
+    return currentValue;
+  } 
+
+
+  bool checkValueWithinBoundaries(short value) {
+    if (value < openedValue) {
+      if (value < closedValue) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    }
+    else {
+      if (value > closedValue) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    }
   }
 
 };
