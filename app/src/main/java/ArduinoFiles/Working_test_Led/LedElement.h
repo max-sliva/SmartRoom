@@ -10,7 +10,9 @@ class LedElement
     String name;  //NAME OF THE OBJECT IN THE NEXTION DISPLAY, USING CAREFULLY
 
   public:
-   LedElement(byte _pin, String _name) {
+   LedElement(byte _pin, String _name = "") 
+      : pin(_pin), name(_name)
+    {
       pinMode(_pin,OUTPUT);
       pin = _pin;
       name = _name;
@@ -25,8 +27,8 @@ class LedElement
   }
 
   void updateLed(byte newValue){
-    value = newValue;
-    analogWrite(pin,newValue);
+    setValue(newValue);
+    updateLed();
   }
 
   void setValue(byte newValue) {
@@ -50,6 +52,9 @@ class LedElement
   }
 
   byte updateValueNextion(EasyNex* source) {
+    if (name == ""){
+      return value;
+    }
     if (name.length() < 5) {
       name += ".val";
     }
