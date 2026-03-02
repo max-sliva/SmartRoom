@@ -16,7 +16,7 @@ void loop() {
   bool but = digitalRead(11);
   if (but == LOW) state1 = true;
   if (but == HIGH && state1 == true) {
-    stvorka.openSrvorka();
+    stvorka.openSrvorka(150);
     state1 = false;
     digitalWrite(13,HIGH);
     delay(200);
@@ -26,7 +26,7 @@ void loop() {
   but = digitalRead(12);
   if (but == LOW) state2 = true;
   if (but == HIGH && state2 == true) {
-    stvorka.closeSrvorka();
+    stvorka.closeSrvorka(150);
     state2 = false;
     digitalWrite(13,HIGH);
     delay(200);
