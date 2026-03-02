@@ -140,8 +140,8 @@ public:
   /**
   *   Procedure to move stvorka element to the position readed by its potentiometr
   */
-  /*short moveDirectTo(short targetValue, byte speed) {
-    if (targerValue != abs(currentValue)) {
+  short moveDirectTo(short targetValue, byte speed) {
+    if (targetValue != abs(currentValue)) {
       if (checkValueWithinBoundaries(targetValue)) {
         const byte TOLERANCE = 4;
         if (targetValue > currentValue) {
@@ -156,11 +156,11 @@ public:
       }
     }
     return currentValue;
-  }*/
+  }
   /**
   *   Returns bool which says that value lays between openedValue & closedValue
   */
-  /*bool checkValueWithinBoundaries(short value) {
+  bool checkValueWithinBoundaries(short value) {
     if (swapped && (value < 0)) {
       value *= -1;
     }
@@ -170,16 +170,18 @@ public:
     else {
       return false;
     }
-  }*/
+  }
   // Metod that turn stvorka to opened position
   void openSrvorka() {
+    Serial.println("opening...");
     analogWrite(openPin,150);
     digitalWrite(closePin,LOW);
-    while (abs(closedValue-updateValueFine()) > 4 );
+    while (abs(openedValue-updateValueFine()) > 4 );
     digitalWrite(openPin,LOW);
   }
   // Metod that turn stvorka to closed position
   void closeSrvorka() {
+    Serial.println("closing...");
     analogWrite(closePin,150);
     digitalWrite(openPin,LOW);
     while (abs(closedValue-updateValueFine()) > 4 );
