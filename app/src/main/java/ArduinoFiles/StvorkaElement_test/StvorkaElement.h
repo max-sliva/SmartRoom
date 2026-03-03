@@ -5,17 +5,17 @@
 #endif
 class StvorkaElement {
 private:
-  byte POWER;       // VARIABLE THAT USED AS CONSTANT: shows how fast(strong) will be turning motor: analogWrite(anyPin,POWER);
-  byte TOLERANCE;   /* VARIABLE THAT USED AS CONSTANT: shows how much different must be 'some' 
+  uint8_t POWER;       // VARIABLE THAT USED AS CONSTANT: shows how fast(strong) will be turning motor: analogWrite(anyPin,POWER);
+  uint8_t TOLERANCE;   /* VARIABLE THAT USED AS CONSTANT: shows how much different must be 'some' 
                      * values related to values getted from potenciometer: analogRead(valuePin); */
-  byte openPin;     // PWM
-  byte closePin;    // PWM
-  byte valuePin;    // Analog
-  short openedValue;    //0 - 1023;
-  short closedValue;    //0 - 1023;
-  short currentValue;   //0 - 1023;
+  uint8_t openPin;     // PWM
+  uint8_t closePin;    // PWM
+  uint8_t valuePin;    // Analog
+  uint16_t openedValue;    //0 - 1023;
+  uint16_t closedValue;    //0 - 1023;
+  uint16_t currentValue;   //0 - 1023;
   // Private procedure that sets all power pins
-  void setPins(byte _openPin, byte _closePin, byte _valuePin) {
+  void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     openPin = _openPin;
     closedPin = _closePin;
     valuePin = _valuePin;
@@ -25,6 +25,26 @@ private:
     pinMode(openPin,OUTPUT);
     pinMode(closePin,OUTPUT);
     pinMode(valuePin,INPUT);
+  }
+  /**
+  *   Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
+  */
+  void moveDirectTo(uint16_t targetValue) {
+    if (targetValue != updateValue()) {
+      uint8_t highPin, lowPin;
+      if ((targetValue>currentValue)^(closedValue>openedValue)) {
+        highPin = openPin;
+        lowPin = closePin;
+      }
+      else {
+        highPin = closePin;
+        lowPin = openPin;
+      }
+      analogWrite(highPin, POWER);
+      digitalWrite(lowPin, LOW);
+      while (abs(openedValue-updateValueFine()) > TOLERANCE);
+      digitalWrite(highPin, LOW);
+    }
   }
 public:
   // Default constructor: WITHOUT PINMODES!!!
@@ -37,13 +57,13 @@ public:
     TOLERANCE = 4;
   }
   // Constuctor where data reads from EEPROM
-  StvorkaElement(int eepromAddress) {
-    readBytesFromEEPROM(eepromAddress);
+  StvorkaElement(uint32_t eepromAddress) {
+    readuint8_tsFromEEPROM(eepromAddress);
     setPinModes();
     updateValue();
   }
   // Constructor with fields (Used in initial setup)
-  StvorkaElement(byte _openPin, byte _closePin, byte _valuePin) {
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     setPins(_openPin, _closePin, _valuePin);
     setPinModes();
     openedValue = 1023;
@@ -53,22 +73,22 @@ public:
     updateValue();
   }
   // Set openedValue & closedValue
-  void setBoundaries(short _openedValue, short _closedValue) {
+  void setBoundaries(uint16_t _openedValue, uint16_t _closedValue) {
     openedValue = _openedValue;
     closedValue = _closedValue;
   }
-  void setConsts(byte _power, byte _tolerance) {
+  void setConsts(uint8_t _power, uint8_t _tolerance) {
     POWER = _power;
     TOLERANCE = _tolerance;
   }
   // Returns value from its potenciometer
-  short updateValue() {
+  uint16_t updateValue() {
     currentValue = analogRead(valuePin);
     return currentValue;
   }
   // Returns value from its potenciometer when its different by value 'TOLERANCE'
-  short updateValueFine() {
-    short newValue = analogRead(valuePin);
+  uint16_t updateValueFine() {
+    uint16_t newValue = analogRead(valuePin);
     if (abs(newValue - currentValue) > TOLERANCE) {
         currentValue = newValue; 
     }
@@ -77,26 +97,27 @@ public:
   /**
   *   Returns raw currentValue
   */
-  short getCurrentValue() {
+  uint16_t getCurrentValue() {
     return currentValue;
   }
   /**
-  *   Function that returns 'currentValue' in the form of byte mapped by boundary values
+  *   Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
   */
-  byte getCurrentValueByte() {
-    return map(currentValue,closedValue,openedValue,0,255);
+  uint8_t getValueInsideBoundaries(uint16_t value) {
+    //value & 0x3FF;     hard cast to 0 - 1023
+    return map(value & 0x3FF,0,1023,closedValue,openedValue);
   }
   /**
-  *   Function that returns any value type of byte in the form short mapped by boundary values
+  *   Function that returns any value type of uint8_t in the form uint16_t mapped by boundary values
   */
-  short getShortValue(byte value) {
+  uint16_t getShortValue(uint8_t value) {
     return map(value,0,255,closedValue,openedValue);
   }
   /**
   *  Procedure to find Boundaries value, by turning element until it can't in both directions
   *  and the final user input in the Serial which position is closed
   */
-  byte findBoundaries(short interruptionTime) {
+  uint8_t findBoundaries(uint16_t interruptionTime) {
     if (!Serial) {
       return 1;
     }
@@ -105,7 +126,7 @@ public:
     analogWrite(openPin,POWER);
     digitalWrite(closePin,LOW);
     long start = millis();
-    short value = updateValue();
+    uint16_t value = updateValue();
     while (!((millis()-start) >= interruptionTime)) {
       if (value != updateValueFine()) {
         start = millis();
@@ -131,7 +152,7 @@ public:
       delay(100);
     }
     if (Serial.read()!='y') {
-      short buffer = openPin;
+      uint16_t buffer = openPin;
       setPins(closePin,openPin,valuePin);
       setBoundaries(closedValue,openedValue);
       closeSrvorka();
@@ -144,32 +165,20 @@ public:
     return 0;
   }
   /**
-  *   Procedure that turns stvorka to procent of opened position, returns value that actually opened to 
+  *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
   */
-  short moveRelativelyTo(byte procentValue) {
-    short transformedValue = getShortValue(procentValue);
+  uint16_t moveRelativelyTo(uint8_t procentValue) {
+    uint16_t transformedValue = getShortValue(procentValue);
     moveDirectTo(transformedValue);
     return transformedValue;
   }
   /**
-  *   Procedure that turns stvorka to raw targetValue readed by potenciometer
+  *   Procedures that turns stvorka to procent of opened position (uint16_t), returns value that actually opened to 
   */
-  void moveDirectTo(short targetValue) {
-    if (targetValue != updateValue()) {
-      byte highPin, lowPin;
-      if ((targetValue>currentValue)^(closedValue>openedValue)) {
-        highPin = openPin;
-        lowPin = closePin;
-      }
-      else {
-        highPin = closePin;
-        lowPin = openPin;
-      }
-      analogWrite(highPin, POWER);
-      digitalWrite(lowPin, LOW);
-      while (abs(openedValue-updateValueFine()) > TOLERANCE);
-      digitalWrite(highPin, LOW);
-    }
+  uint16_t moveRelativeTo(uint16_t procentValue) {
+    uint16_t transformedValue = getValueInsideBoundaries(procentValue);
+    moveDirectTo(transformedValue);
+    return transformedValue;
   }
   // Metod that turn stvorka to opened position
   void openSrvorka() {
@@ -187,32 +196,47 @@ public:
     while (abs(closedValue-updateValueFine()) > TOLERANCE);
     digitalWrite(closePin,LOW);
   }
-  void writeBytesToEEPROM(int eepromAddress) {
-    //Serial.println("writing to EEPROM...");
-    // openedValue & closedValue transformation to 3 bytes for
-    // 0-1024 is 10 bits what means that 10 bits of each short (overall 20 bits / 2 bytes & 4 bits) must be located in 3 bytes 
-    byte b6 = static_cast<byte>(openedValue), b7, b8;   // put first 8 bits of openedValue in b6 (8 of 20)
-    b7 = static_cast<byte>(openedValue >> 8);           // put 2 higher bits of openedValue in the start of b7 (10 of 20)
-    b7 = b7 | (static_cast<byte>(closedValue << 2));      // put 6 lower bits of closedValue in the end of b7 (16 of 20)
-    b8 = static_cast<byte>(closedValue >> 6);           // put 4 higher bits of closedValue in the start of b8 (20 of 20)
-    const byte array[] = {POWER, TOLERANCE, openPin, closedPin, valuePin, b6, b7, b8};
-    for (int i = 0; i < 8; i++) {
+  /**
+  * Procedure that writes parametrs of this object in EEPROM on adress 'eepromAddress' in the form of uint8_t
+  * first 10 bytes of openedValue & closedValue meshed together in uint32_t and after was packed in 3 different uint8_t 
+  */
+  void writeBytesToEEPROM(uint32_t eepromAddress) {
+    Serial.print("writing to EEPROM on adress ");
+    Serial.print(eepromAddress);
+    Serial.print(": ");
+    uint32_t buffer = static_cast<uint32_t>(openedValue) | (static_cast<uint32_t>(closedValue) << 10);
+    const uint8_t array[] = {POWER, TOLERANCE, openPin, closedPin, valuePin,
+       static_cast<uint8_t>(buffer), static_cast<uint8_t>(buffer >> 8), static_cast<uint8_t>(buffer >> 16)};
+    for (short i = 0; i < 8; i++) {
+      Serial.print(array[i]);
+      Serial.print(" ");
       EEPROM.update(eepromAddress+i,array[i]);
     }
+    Serial.println("--> DONE");
   }
-
-  void readBytesFromEEPROM(int eepromAddress) {
-    //Serial.println("reading from EEPROM...");
-    byte array[8];
-    for (int i = 0; i < 8; i++) {
+  /**
+  * Procedure that reads 8 uint8_t from EEPROM on adress 'eepromAddress'
+  * last 3 readed uint8_t reassembled to openedValue & closedValue type of uint16_t
+  * readed memory writed directly to parametrs of this object
+  */
+  void readBytesFromEEPROM(uint32_t eepromAddress) {
+    Serial.print("writing to EEPROM from adress ");
+    Serial.print(eepromAddress);
+    Serial.print(": ");
+    uint8_t array[8];
+    for (short i = 0; i < 8; i++) {
       EEPROM.get(eepromAddress+i, array[i]);
+      Serial.print(array[i]);
+      Serial.print(" ");
     }
     setConsts(array[0],array[1]);
     setPins(array[2],array[3],array[4]);
-    short openedV = static_cast<short>(array[5]), closedV;              // put first 8 bits in openedV (8 of 20)
-    openedV = openedV | ((static_cast<short>(array[6]) << 8) & 0x300);  // put higher 2 bits in openedV (10 of 20)
-    closedV = static_cast<short>(array[6] >> 2);                        // put 6 lower bits in closedV (16 of 20)
-    closedV = closedV | (static_cast<short>(array[7]) << 6);            // put 4 higher bits in closedV (20 of 20)
+    uint16_t openedV, closedV;
+    // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
+    openedV = static_cast<uint16_t>(array[0]) | (static_cast<uint16_t>(array[1] & 0b11) << 8);
+    // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
+    closedV = static_cast<uint16_t>(array[1] >> 2) | (static_cast<uint16_t>(array[2]) << 6);
     setBoundaries(openedV,closedV);
+    Serial.println("--> DONE");
   }
 };
