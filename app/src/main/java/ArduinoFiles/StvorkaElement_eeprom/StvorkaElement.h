@@ -17,7 +17,7 @@ private:
   // Private procedure that sets all power pins
   void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     openPin = _openPin;
-    closedPin = _closePin;
+    closePin = _closePin;
     valuePin = _valuePin;
   }
   // Private procedure that sets all pinMode to pins
@@ -29,7 +29,7 @@ private:
   /**
   *   Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
   */
-  void moveDirectTo(uint16_t targetValue) {
+  void moveDirectTo(int16_t targetValue) {
     if (targetValue != updateValue()) {
       uint8_t highPin, lowPin;
       if ((targetValue>currentValue)^(closedValue>openedValue)) {
@@ -42,7 +42,7 @@ private:
       }
       analogWrite(highPin, POWER);
       digitalWrite(lowPin, LOW);
-      while (abs(openedValue-updateValueFine()) > TOLERANCE);
+      while (abs(targetValue-updateValue()) > TOLERANCE);
       digitalWrite(highPin, LOW);
     }
   }
@@ -54,11 +54,11 @@ public:
     closedValue = 0;
     currentValue = 0;
     POWER = 150;
-    TOLERANCE = 4;
+    TOLERANCE = 16;
   }
   // Constuctor where data reads from EEPROM
   StvorkaElement(uint32_t eepromAddress) {
-    readuint8_tsFromEEPROM(eepromAddress);
+    readBytesFromEEPROM(eepromAddress);
     setPinModes();
     updateValue();
   }
@@ -69,7 +69,7 @@ public:
     openedValue = 1023;
     closedValue = 0;
     POWER = 150;
-    TOLERANCE = 4;
+    TOLERANCE = 16;
     updateValue();
   }
   // Set openedValue & closedValue
@@ -82,12 +82,12 @@ public:
     TOLERANCE = _tolerance;
   }
   // Returns value from its potenciometer
-  uint16_t updateValue() {
+  int16_t updateValue() {
     currentValue = analogRead(valuePin);
     return currentValue;
   }
   // Returns value from its potenciometer when its different by value 'TOLERANCE'
-  uint16_t updateValueFine() {
+  int16_t updateValueFine() {
     uint16_t newValue = analogRead(valuePin);
     if (abs(newValue - currentValue) > TOLERANCE) {
         currentValue = newValue; 
@@ -185,7 +185,7 @@ public:
     //Serial.println("opening...");
     analogWrite(openPin,POWER);
     digitalWrite(closePin,LOW);
-    while (abs(openedValue-updateValueFine()) > TOLERANCE);
+    while (abs(openedValue-updateValue()) > TOLERANCE);
     digitalWrite(openPin,LOW);
   }
   // Metod that turn stvorka to closed position
@@ -193,7 +193,7 @@ public:
     //Serial.println("closing...");
     analogWrite(closePin,POWER);
     digitalWrite(openPin,LOW);
-    while (abs(closedValue-updateValueFine()) > TOLERANCE);
+    while (abs(closedValue-updateValue()) > TOLERANCE);
     digitalWrite(closePin,LOW);
   }
   /**
@@ -205,7 +205,7 @@ public:
     Serial.print(eepromAddress);
     Serial.print(": ");
     uint32_t buffer = static_cast<uint32_t>(openedValue) | (static_cast<uint32_t>(closedValue) << 10);
-    const uint8_t array[] = {POWER, TOLERANCE, openPin, closedPin, valuePin,
+    const uint8_t array[] = {POWER, TOLERANCE, openPin, closePin, valuePin,
        static_cast<uint8_t>(buffer), static_cast<uint8_t>(buffer >> 8), static_cast<uint8_t>(buffer >> 16)};
     for (short i = 0; i < 8; i++) {
       Serial.print(array[i]);
@@ -233,9 +233,9 @@ public:
     setPins(array[2],array[3],array[4]);
     uint16_t openedV, closedV;
     // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
-    openedV = static_cast<uint16_t>(array[0]) | (static_cast<uint16_t>(array[1] & 0b11) << 8);
+    openedV = static_cast<uint16_t>(array[5]) | (static_cast<uint16_t>(array[6] & 0b11) << 8);
     // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
-    closedV = static_cast<uint16_t>(array[1] >> 2) | (static_cast<uint16_t>(array[2]) << 6);
+    closedV = static_cast<uint16_t>(array[6] >> 2) | (static_cast<uint16_t>(array[7]) << 6);
     setBoundaries(openedV,closedV);
     Serial.println("--> DONE");
   }
