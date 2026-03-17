@@ -220,7 +220,7 @@ public:
   * readed memory writed directly to parametrs of this object
   */
   void readBytesFromEEPROM(uint32_t eepromAddress) {
-    Serial.print("writing to EEPROM from adress ");
+    Serial.print("reading from EEPROM from adress ");
     Serial.print(eepromAddress);
     Serial.print(": ");
     uint8_t array[8];
