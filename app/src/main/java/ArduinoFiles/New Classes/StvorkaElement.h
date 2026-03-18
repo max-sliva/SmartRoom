@@ -1,7 +1,7 @@
 #include "Element"
 
 class StvorkaElement : public Element {
-private:
+protected:
     uint8_t openedValue;
     uint8_t closedValue;
     uint8_t POWER;

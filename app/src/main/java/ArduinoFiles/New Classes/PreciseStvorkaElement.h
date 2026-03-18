@@ -1,7 +1,7 @@
 #include "StvorkaElement.h"
 
 class PreciseStvorkaElement : public StvorkaElement {
-private:
+protected:
     /**
       Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
     */

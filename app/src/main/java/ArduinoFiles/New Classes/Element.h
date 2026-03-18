@@ -3,11 +3,11 @@
     Abstract class for Electronic Elements
 */
 class Element {
-private:
+protected:
     /**
         array* of pins which which this element needed to be used in its tasks
     */
-    uint8_t* PINS;
+    uint8_t* PINS = null;
     /**
         uint8_t value of Element which this element needed to be used in its tasks
     */ 

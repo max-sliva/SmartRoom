@@ -1,7 +1,7 @@
 #include "Element.h"
 
 class LedElement : public Element {
-private:
+protected:
     /**
         Private procedure that sets all pinMode to pins 
     */
