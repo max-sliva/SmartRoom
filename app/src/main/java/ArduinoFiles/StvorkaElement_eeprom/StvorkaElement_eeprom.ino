@@ -1,19 +1,32 @@
 #include "StvorkaElement.h"
 
-StvorkaElement stvorka(6,7,A0);
+StvorkaElement stvorka(2,3,A5);
 
 void setup() {
   pinMode(13,OUTPUT);
   Serial.begin(9600);
   while (!Serial);
-  stvorka.findBoundaries(200);
-  stvorka.writeBytesToEEPROM(0);
+  Serial.println("=====================================");
+  Serial.println("Start findBoundaries? [y/n]");
+  while (!(Serial.available()>0)) {
+    delay(100);
+  }
+  if (Serial.read()!='y') {
+    stvorka.findBoundaries(150);
+  }
+  Serial.println("Write Bytes? [y/n]");
+  while (!(Serial.available()>0)) {
+    delay(100);
+  }
+  if (Serial.read()!='y') {
+    stvorka.writeBytesToEEPROM(16);
+  }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  digitalWrite(13,HIGH);
-  delay(950);
+  analogWrite(13,100);
+  delay(100);
   digitalWrite(13,LOW);
-  delay(50);
+  delay(900);
 }
