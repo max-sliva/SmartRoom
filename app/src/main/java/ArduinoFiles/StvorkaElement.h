@@ -1,5 +1,6 @@
 #include "Arduino.h"
-#include <EEPROM.h>
+#include "MemoryHandler.h"
+
 #ifndef EasyNextionLibrary_h
 #define EasyNextionLibrary_h
 #endif
@@ -54,13 +55,20 @@ public:
     closedValue = 0;
     currentValue = 0;
     POWER = 150;
-    TOLERANCE = 4;
+    TOLERANCE = 16;
   }
   // Constuctor where data reads from EEPROM
   StvorkaElement(uint32_t eepromAddress) {
-    readBytesFromEEPROM(eepromAddress);
+    uint8_t* args = MemoryHandler::readBytesFromEEPROM(eepromAddress,8);
+    setConsts(args[0],args[1]);
+    setPins(args[2],args[3],args[4]);
+    uint16_t openedV, closedV;
+    // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
+    openedV = static_cast<uint16_t>(array[5]) | (static_cast<uint16_t>(array[6] & 0b11) << 8);
+    // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
+    closedV = static_cast<uint16_t>(array[6] >> 2) | (static_cast<uint16_t>(array[7]) << 6);
+    setBoundaries(openedV,closedV);
     setPinModes();
-    updateValue();
   }
   // Constructor with fields (Used in initial setup)
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
@@ -90,7 +98,7 @@ public:
   int16_t updateValueFine() {
     uint16_t newValue = analogRead(valuePin);
     if (abs(newValue - currentValue) > TOLERANCE) {
-      currentValue = newValue; 
+        currentValue = newValue; 
     }
     return currentValue;
   }
@@ -196,47 +204,17 @@ public:
     while (abs(closedValue-updateValue()) > TOLERANCE);
     digitalWrite(closePin,LOW);
   }
-  /**
-  * Procedure that writes parametrs of this object in EEPROM on adress 'eepromAddress' in the form of uint8_t
-  * first 10 bytes of openedValue & closedValue meshed together in uint32_t and after was packed in 3 different uint8_t 
+  /*
+    Returns representation of this object in type of uint_8t of 8 elem*
   */
-  void writeBytesToEEPROM(uint32_t eepromAddress) {
-    Serial.print("writing to EEPROM on adress ");
-    Serial.print(eepromAddress);
-    Serial.print(": ");
+  uint8_t* toArray() {
     uint32_t buffer = static_cast<uint32_t>(openedValue) | (static_cast<uint32_t>(closedValue) << 10);
-    const uint8_t array[] = {POWER, TOLERANCE, openPin, closePin, valuePin,
+    uint8_t* array = new uint8_t[8] {POWER, TOLERANCE, openPin, closePin, valuePin,
        static_cast<uint8_t>(buffer), static_cast<uint8_t>(buffer >> 8), static_cast<uint8_t>(buffer >> 16)};
-    for (short i = 0; i < 8; i++) {
-      Serial.print(array[i]);
-      Serial.print(" ");
-      EEPROM.update(eepromAddress+i,array[i]);
-    }
-    Serial.println("--> DONE");
+    return array;
   }
-  /**
-  * Procedure that reads 8 uint8_t from EEPROM on adress 'eepromAddress'
-  * last 3 readed uint8_t reassembled to openedValue & closedValue type of uint16_t
-  * readed memory writed directly to parametrs of this object
-  */
-  void readBytesFromEEPROM(uint32_t eepromAddress) {
-    Serial.print("writing to EEPROM from adress ");
-    Serial.print(eepromAddress);
-    Serial.print(": ");
-    uint8_t array[8];
-    for (short i = 0; i < 8; i++) {
-      EEPROM.get(eepromAddress+i, array[i]);
-      Serial.print(array[i]);
-      Serial.print(" ");
-    }
-    setConsts(array[0],array[1]);
-    setPins(array[2],array[3],array[4]);
-    uint16_t openedV, closedV;
-    // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
-    openedV = static_cast<uint16_t>(array[5]) | (static_cast<uint16_t>(array[6] & 0b11) << 8);
-    // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
-    closedV = static_cast<uint16_t>(array[6] >> 2) | (static_cast<uint16_t>(array[7]) << 6);
-    setBoundaries(openedV,closedV);
-    Serial.println("--> DONE");
+  void writeBytesToEEPROM(uint32_t eepromAddress) {
+    MemoryHandler::writeBytesToEEPROM(eepromAddress,8,toArray());
   }
+
 };
