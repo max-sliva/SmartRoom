@@ -1,6 +1,6 @@
 #include "StvorkaElement.h"
 
-StvorkaElement stvorka(2,3,A5);
+StvorkaElement stvorka(5,6,A3);
 
 void setup() {
   pinMode(13,OUTPUT);
@@ -11,14 +11,16 @@ void setup() {
   while (!(Serial.available()>0)) {
     delay(100);
   }
-  if (Serial.read()!='y') {
+  if (Serial.read()=='y') {
+    while(Serial.read() >= 0);
     stvorka.findBoundaries(150);
   }
+  while(Serial.read() >= 0);
   Serial.println("Write Bytes? [y/n]");
   while (!(Serial.available()>0)) {
     delay(100);
   }
-  if (Serial.read()!='y') {
+  if (Serial.read()=='y') {
     stvorka.writeBytesToEEPROM(16);
   }
 }

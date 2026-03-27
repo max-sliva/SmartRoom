@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "Arduino.h"
 #include "MemoryHandler.h"
 
@@ -60,20 +61,12 @@ public:
   // Constuctor where data reads from EEPROM
   StvorkaElement(uint32_t eepromAddress) {
     uint8_t* args = MemoryHandler::readBytesFromEEPROM(eepromAddress,8);
-    Serial.println("Constructor Stvorka");
-    for (int i = 0; i < 8; i++) {
-            Serial.print(args[i]);
-            Serial.print(" ");
-        }
-        Serial.println();
     setConsts(args[0],args[1]);
     setPins(args[2],args[3],args[4]);
-    uint16_t openedV, closedV;
     // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
-    openedV = static_cast<uint16_t>(args[5]) | (static_cast<uint16_t>(args[6] & 0b11) << 8);
+    openedValue = static_cast<uint16_t>(args[5]) | (static_cast<uint16_t>(args[6] & 0b11) << 8);
     // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
-    closedV = static_cast<uint16_t>(args[6] >> 2) | (static_cast<uint16_t>(args[7]) << 6);
-    setBoundaries(openedV,closedV);
+    closedValue = static_cast<uint16_t>(args[6] >> 2) | (static_cast<uint16_t>(args[7]) << 6);
     setPinModes();
   }
   // Constructor with fields (Used in initial setup)
@@ -131,8 +124,10 @@ public:
    *  Returns true if value lays between opened & closed Values of stvorkaElement, else false;
    */
   bool valueInsideBoundaries(uint16_t value) {
-      uint16_t num1 = abs(abs(openedValue - value) + abs(closedValue - value));
-      return (abs(openedValue - closedValue) == num1);
+      int16_t length1, length2;
+      length1 = abs(static_cast<int16_t>(openedValue - value));
+      length2 = abs(static_cast<int16_t>(closedValue - value));
+      return (abs(openedValue - closedValue) == (length1 + length2));
     }
   /**
   *  Procedure to find Boundaries value, by turning element until it can't in both directions
@@ -188,7 +183,7 @@ public:
   /**
   *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
   */
-  uint16_t moveRelativelyTo(uint8_t procentValue) {
+  uint16_t moveRelativelyToByte(uint8_t procentValue) {
     uint16_t transformedValue = getShortValue(procentValue);
     moveDirectTo(transformedValue);
     return transformedValue;
@@ -196,7 +191,7 @@ public:
   /**
   *   Procedures that turns stvorka to procent of opened position (uint16_t), returns value that actually opened to 
   */
-  uint16_t moveRelativeTo(uint16_t procentValue) {
+  uint16_t moveRelativeToShort(uint16_t procentValue) {
     uint16_t transformedValue = getValueInsideBoundaries(procentValue);
     moveDirectTo(transformedValue);
     return transformedValue;
