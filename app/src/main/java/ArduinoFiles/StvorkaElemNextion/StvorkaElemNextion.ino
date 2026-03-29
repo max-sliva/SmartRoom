@@ -19,11 +19,11 @@ void loop() {
   myNex.NextionListen();
 }
 
-// Trigger that trun stvorkas to position from nextion page /w windows
+// Trigger 1
 void trigger1() {
   
 }
-//  TO DO Trigger that puts window stvorkas values in nextion page /w windows
+//  Trigger that trun stvorkas to position from nextion page /w windows
 void trigger2() {
   stvorkas[0].moveRelativelyToByte(myNex.readNumber("h1.val"));
   stvorkas[1].moveRelativelyToByte(myNex.readNumber("h2.val"));
