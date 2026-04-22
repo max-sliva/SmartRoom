@@ -20,7 +20,7 @@ void loop() {
   if (digitalRead(2) == LOW) butstate = true;
   if ((digitalRead(2) == HIGH) && (butstate == true)) {
     Wire.beginTransmission(8);
-    Wire.write(static_cast<uint8_t>(map(analogRead(A15),0,1023,0,255)));
+    Wire.write(map(analogRead(A15),0,1023,0,255));
     Wire.endTransmission();
 
     digitalWrite(13,HIGH);
