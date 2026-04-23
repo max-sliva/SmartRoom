@@ -12,19 +12,29 @@ uint8_t colNum;
 
 void sendFunction(uint8_t comma, uint8_t data1, uint8_t data2, uint8_t addres) {
   byte data[3] = {comma, data1, data2};
+
   Wire.beginTransmission(addres);
-  Wire.write(data, sizeof(data))
+  Wire.write(data, sizeof(data));
   Wire.endTransmission();
 }
 
 void setup() {
-  Serial.begin(9600);  // Must match Nextion baud rate
-  myNex.begin(9600);
+  Serial.begin(115200);  // Must match Nextion baud rate
+  myNex.begin(115200);
   Wire.begin();
+
+  pinMode(A0,INPUT);
+  pinMode(53,OUTPUT);
+  pinMode(13,OUTPUT);
+  digitalWrite(53,LOW);
 }
 
 void loop() {
   myNex.NextionListen();
+  if (digitalRead(A0) == LOW) {
+    delay(1000);
+    digitalWrite(53, HIGH);
+  }
 }
 
 void trigger0() {
@@ -42,6 +52,11 @@ void trigger0() {
 }
 
 void trigger1() {
+
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+
   // установка цветовой палитры
   if (values[1] == values[2]) {
     values[0] = values[1];

@@ -1,3 +1,5 @@
+#include <Wire.h>
+
 uint8_t dataContr[2] = {8,2};
 uint8_t pinLeds[2] = {10,11};
 uint8_t ledData[2] = {0xFF,0xFF};
