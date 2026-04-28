@@ -66,9 +66,7 @@ void trigger0() {
 }
 
 void trigger1() {
-  for (uint8_t i = 0; i < 4;i++) {6
-    values[i] = myNex.readNumber(names[i]);
-  }
+  values[0] = myNex.readNumber(names[0]);
   sendFunction(0,values[0],0,8);
 }
 
@@ -82,4 +80,8 @@ void trigger2() {
     values[2] = myNex.readNumber(names[2]);
     sendFunction(1,1,values[2],8);
   }
+}
+
+void trigger3() {
+  
 }

@@ -4,7 +4,7 @@
 class LedHandler {
 private:
   /**
-        uint8_t number of posible connetcion Led Lines
+        uint8_t number of posible connetcions Led Lines
     */
   uint8_t numberOfConnections;
   /**
@@ -14,7 +14,7 @@ private:
   /**
         uint8_t array of data which used in OUTPUT on pins, needed to request current brightness of leds
     */
-  uint8_t* arrayOfLedData;
+  uint8_t* arrayOfData;
 public:
   /**
         Default constructor
@@ -22,7 +22,7 @@ public:
   LedHandler() {
     numberOfConnections = 0;
     arrayOfPins = nullptr;
-    arrayOfLedData = nullptr;
+    arrayOfData = nullptr;
   }
   /**
         Constructor with fields: numberOfConnections, uint8_t ptr (must match numberOfConnections)
@@ -30,7 +30,7 @@ public:
   LedHandler(uint8_t newNumberOfPins, uint8_t * newPins) {
     numberOfConnections = newNumberOfPins;
     arrayOfPins = newPins;
-    arrayOfLedData = new uint8_t[numberOfConnections];
+    arrayOfData = new uint8_t[numberOfConnections];
     for (uint16_t i = 0; i < numberOfConnections; i++) {
       pinMode(arrayOfPins[i], OUTPUT);
       setValue(i, 0xFF);
@@ -70,7 +70,7 @@ public:
       return 1;
     }
     analogWrite(arrayOfPins[ledId], newValue);
-    arrayOfLedData[ledId] = newValue;
+    arrayOfData[ledId] = newValue;
     return 0;
   }
   uint8_t setValue(uint8_t ledId, uint8_t newValue, uint32_t ms) {
@@ -83,14 +83,14 @@ public:
       return 1;
     }
 
-    int16_t differenceValue = static_cast<int16_t>(newValue) - static_cast<int16_t>(arrayOfLedData[ledId]);
+    int16_t differenceValue = static_cast<int16_t>(newValue) - static_cast<int16_t>(arrayOfData[ledId]);
     int16_t absDifference = abs(differenceValue);
     uint8_t value_dx = absDifference / differenceValue;
     uint16_t ms_dx = ms / absDifference;
     for (uint16_t i = 0; i < absDifference; i++) {
       delay(ms_dx);
-      arrayOfLedData[ledId] += value_dx;
-      analogWrite(arrayOfPins[ledId], arrayOfLedData[ledId]);
+      arrayOfData[ledId] += value_dx;
+      analogWrite(arrayOfPins[ledId], arrayOfData[ledId]);
     }
     return 0;
   }
@@ -104,7 +104,7 @@ public:
     }
     for (uint16_t i = 0; i < numberOfConnections; i++) {
       analogWrite(arrayOfPins[i], newValue);
-      arrayOfLedData[i] = newValue;
+      arrayOfData[i] = newValue;
     }
     return 0;
   }
@@ -122,7 +122,7 @@ public:
       //uint32_t new_ms = ms / 10;
       for (uint8_t i = 0; i < numberOfConnections; i++) {
         value_dx[i] = 1;
-        value_diff[i] = newValue - arrayOfLedData[i];
+        value_diff[i] = newValue - arrayOfData[i];
         if (value_diff[i] < 0) {
           value_dx[i] *= -1;
         }
@@ -138,9 +138,9 @@ public:
       for (uint32_t i = 0; i < ms; i++) {
         for (j = 0; j < numberOfConnections; j++) {
           if ((i % mod_dx[j]) == 0) {
-            if (((arrayOfLedData[j] + value_dx[j]) < 255) && ((arrayOfLedData[j] + value_dx[j]) >= 0)) {
-              arrayOfLedData[j] += value_dx[j];
-              analogWrite(arrayOfPins[j], arrayOfLedData[j]);
+            if (((arrayOfData[j] + value_dx[j]) < 255) && ((arrayOfData[j] + value_dx[j]) >= 0)) {
+              arrayOfData[j] += value_dx[j];
+              analogWrite(arrayOfPins[j], arrayOfData[j]);
             }
           }
         }
