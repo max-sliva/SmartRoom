@@ -7,27 +7,33 @@ LedHandler* my_leds;
 
 void receiveEvent() {
   uint8_t dataFunc[3];
-  uint8_t i = 0;
+  uint8_t count = 0;
   while(Wire.available()) {   // Пока есть данные
-    dataFunc[i] = Wire.read(); // Получить 1 байт
-    i++;
-    if (i > 3) break;
+    dataFunc[count] = Wire.read(); // Получить 1 байт
+    count++;
+    if (count > 3) break;
   }
   switch (dataFunc[0]) {
     case 0:
-      my_leds->setValueAll(dataFunc[1],1000);
+      dataContr[1] = dataFunc[1];
       break;
     case 1:
-    my_leds->setValue(dataFunc[1],dataFunc[2],1000);
+      my_leds->setValueAll(dataFunc[1],1000);
+      break;
+    case 2:
+      my_leds->setValue(dataFunc[1],dataFunc[2],1000);
       break;
   }
 }
 
 void requestEvent() {
-  uint8_t numberOfBytes = 2;
-  Wire.write(numberOfBytes);
-  Wire.write(my_leds->getValue(0));
-  Wire.write(my_leds->getValue(1));
+  switch (dataContr[1]) {
+    case 2:
+      for (uint8_t i = 0; i < my_leds->getNumberOfConnetcion(); i++) {
+        Wire.write(my_leds->getValue(i));
+      }
+      break;
+  }
 }
 
 void setup() {

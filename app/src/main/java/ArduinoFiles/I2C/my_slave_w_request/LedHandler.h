@@ -48,6 +48,9 @@ public:
     }
     return byteArray;
   }
+  uint8_t getNumberOfConnetcion() {
+    return numberOfConnections;
+  }
   uint8_t getValue(uint8_t ledId) {
     return arrayOfData[ledId];
   }
