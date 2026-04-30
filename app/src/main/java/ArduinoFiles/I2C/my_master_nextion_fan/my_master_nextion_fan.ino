@@ -35,22 +35,37 @@ uint8_t* sendRequest(uint8_t numberOfBytes, uint8_t address) {
   return dataReq;
 }
 
-char* offProcCString(uint8_t value) {
-  char buffer[5];
-  if (value == 0) {
-    strcpy(buffer,"off");
-  }
-  else {
-    itoa(value, buffer, 10);
-    buffer[3] = '%';
-    buffer[4] = 0;
-  }
-  return buffer;
-}
+// char* offProcCString(uint8_t value) {
+//   char buffer[5];
+//   if (value == 0) {
+//     strcpy(buffer,"off");
+//   }
+//   else {
+//     itoa(value, buffer, 10);
+//     buffer[3] = '%';
+//     buffer[4] = 0;
+//   }
+//   return buffer;
+// }
 
 void updateTextLabels() {
-  myNex.writeNum("t0.txt",offProcCString(values[0]));
-  myNex.writeNum("t1.txt",offProcCString(fan.getValue()));
+  // myNex.writeNum("t0.txt",offProcCString(values[0]));
+  // myNex.writeNum("t1.txt",offProcCString(fan.getValue()));
+  String buffer;
+  if (values[0] > 0) {
+    buffer = String(map(values[0],0,255,0,100)) + "\%"; 
+  }
+  else {
+    buffer = "off";
+  }
+  myNex.writeStr("t0.txt=\"" + buffer + "\"");
+  if (fan.getValue() > 10) {
+    buffer = String(map(fan.getValue(),0,255,0,100)) + "\%"; 
+  }
+  else {
+    buffer = "off";
+  }
+  myNex.writeStr("t1.txt=\"" + buffer + "\"");
 }
 
 void setup() {
@@ -73,6 +88,7 @@ void setup() {
 void loop() {
   myNex.NextionListen();
   if (digitalRead(A0) == LOW) {
+    digitalWrite(52,LOW);
     delay(1000);
     digitalWrite(53, HIGH);
   }
@@ -85,12 +101,7 @@ void loop() {
 }
 
 void trigger0() {
-
-  digitalWrite(13, HIGH);
-  delay(200);
-  digitalWrite(13, LOW);
-
-  // установка цветовой палитры
+   // установка цветовой палитры
   if (values[1] == values[2]) {
     values[0] = values[1];
     values[4] = 0;
@@ -131,9 +142,6 @@ void trigger2() {
 }
 
 void trigger3() {
-  digitalWrite(13,HIGH);
-  delay(200);
-  digitalWrite(13,LOW);
   fan.setAccuratePWMValue(myNex.readNumber(names[1]));
 }
 
