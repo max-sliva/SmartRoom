@@ -4,40 +4,40 @@
 
 class LockHandler {
 private:
-    char bufferChar;
-    uint8_t numRows;
-    uint8_t numCols;
-
-    uint8_t ledPins[2];
-
+    char bufferChar;    // buffer char for this_keypad.getKey()
+    uint8_t ledPins[2]; // pins for leds on lock panel
+    // VALUES FOR KEYPAD
+    uint8_t numRows, numCols;
+    // POINTER FOR ARRAYS OF PINS & KEYMAP
     char* keymap;
-    uint8_t* rowPins;
-    uint8_t* colPins;
+    uint8_t* rowPins, colPins;
     // BUTTON PINS
-    uint8_t butPinIn;
-    uint8_t butPinOut;
-    // KEYPAD POINTER
+    uint8_t butPinIn, butPinOut;
+    // KEYPAD
     Keypad this_keypad;
     // PASSWORD
-    char password[8];
-    uint32_t hashPassword;
-    uint8_t countChar = 0;
+    char password[8];   // min 3, max 8
+    uint32_t hashPassword;  // hash value from hashDJB2(password)
+    uint8_t countChar = 0;  // count for filled password characters
     uint8_t lengthOfPassword;
-    boolean locked;
-
-    boolean stateWritePass;
+    // BOOLEAN VALUES
+    boolean locked; // boolean value that shows door locked or not
+    boolean stateWritePass; // boolean value that shows password is currently filling or not
     // 32 bit long value to check time out when requesting enter
     uint32_t timeRequest;
     uint32_t time_ms;
+    uint16_t timeOut;
     /**
         Writes charDigit in password[8], return if countChar == lengthOfPassword
     */
     boolean writeCharPass(char charDigit) {
-        password[countChar++] = charDigit;
+        if (countChar < lengthOfPassword) {
+            password[countChar++] = charDigit;
+        }
         digitalWrite(ledPins[1],HIGH);
         delay(100);
         digitalWrite(ledPins[1],LOW);
-        return countChar == lengthOfPassword;   
+        return countChar >= lengthOfPassword;   
     }
     /**
         Procedure that resets password to all 0 & sets countChar at 0
@@ -50,7 +50,7 @@ private:
         countChar = 0;
     }
     /**
-        Turns D-latch on button to that boolean value
+        Turns D-latch on button to boolean value
     */
     void setButtonValue(boolean value) {
         if (digitalRead(butPinOut) != value) {
@@ -58,6 +58,9 @@ private:
             digitalWrite(butPinIn,LOW);
         }
     }
+    /**
+        Hash function, returns uint32_t hash value from char* str
+    */
     unsigned long hashDJB2(char *str) {
         unsigned long hash = 5381;
         int c;
@@ -66,6 +69,9 @@ private:
         }
         return hash;
     }
+    /**
+        Procedure that complete some algorith when need to grant enter to room
+    */
     void grantEnter() {
         locked = false;
         digitalWrite(ledPins[0],LOW);
@@ -77,13 +83,17 @@ public:
     LockHandler() {
 
     }
-
+    /**
+        Returns true if button is true OR keypad got Key pressed
+    */
     boolean checkInteraction() {
         bufferChar = this_keypad.getKey();
         return digitalRead(butPinOut) || (buffer != NO_KEY);
     }
-
-    int8_t LockListener() {
+    /**
+        Procedure that runs in loop(), 
+    */
+    int8_t lockListener() {
         if (locked) {
             if (stateWritePass == false) {
                 if (checkInteraction() == true) {
@@ -113,8 +123,8 @@ public:
                                 return 1;
                             }
                         }
-                    }
-                    if (millis() - timeRequest >= 60000) {
+                    }   
+                    if (millis() - timeRequest >= timeOut) {
                         stateWritePass = false;
                         resetPassword();
                         setButtonValue(LOW);
@@ -133,21 +143,5 @@ public:
             }
             return 0; 
         }
-        // if (checkInteraction() == HIGH) {
-        //     setButtonValue(HIGH);
-        //     if (bufferChar != NO_KEY) {
-        //         password[0] = bufferChar;
-        //         stateWritePass = true;
-        //         countChar++;
-        //     }
-        //     if (millis() - time_ms > 1000) {
-        //         time_ms = millis();
-        //         digitalWrite(ledPins[1],HIGH);
-        //     } 
-        //     if (millis() - time_ms > 200) {
-        //         time_ms = millis();
-        //         digitalWrite(ledPins[1],LOW);
-        //     }
-        // }
     }
 };
