@@ -1,0 +1,138 @@
+#include "Arduino.h"
+#ifndef EasyNextionLibrary_h
+#define EasyNextionLibrary_h
+#endif
+class StvorkaElement {
+private:
+  byte openPin;     // PWM
+  byte closePin;    // PWM
+  byte valuePin;    // Analog
+  short openedValue;    //0 - 1023
+  short closedValue;    //0 - 1023
+  short currentValue;   //0 - 1023
+  String name;      // NAME OF THE OBJECT IN THE NEXTION DISPLAY, USING CAREFULLY
+  bool swapped;
+public:
+  StvorkaElement(byte _openPin, byte _closePin, byte _valuePin, String _name = "")
+    : openPin(_openPin), closePin(_closePin), valuePin(_valuePin), name(_name)
+  {
+    pinMode(openPin,OUTPUT);
+    pinMode(closePin,OUTPUT);
+    pinMode(valuePin,INPUT);
+    openedValue = 1023;
+    closedValue = 0;
+    currentValue = 0;
+    bool swapped;
+  }
+  // Set openedValue & closedValue
+  void setBoundaries(short _openedValue, short _closedValue) {
+    openedValue = _openedValue;
+    closedValue = _closedValue;
+  }
+  // Returns raw value from its potenciometer
+  short updateValue() {
+    currentValue = analogRead(valuePin);
+    return currentValue;
+  }
+  // Returns raw value from its potenciometer when its different by value 'TOLERANCE'
+  short updateValueFine() {
+    const byte TOLERANCE = 4;
+    short newValue = analogRead(valuePin);
+    if (abs(newValue - currentValue) > TOLERANCE) {
+        currentValue = newValue; 
+    }
+    return currentValue;
+  }
+  short getCurrentValue() {
+    return currentValue;
+  }
+  /**
+  *  Procedure to find Boundaries value, by turning element until it can't in both directions
+  *  and the final user input in the Serial which position is closed
+  */
+  byte findBoundaries(short interruptionTime, byte speed) {
+    if (!Serial) {
+      return 1;
+    }
+    Serial.println("Starting finding boundaries...");
+    analogWrite(openPin,speed);
+    digitalWrite(closePin,LOW);
+    long start = millis();
+    short value = currentValue;
+    while (true) {
+      if (value != updateValueFine()) {
+        start = millis();
+        value = currentValue;
+      }
+      else {
+        // exit point from infinite while()
+        if ((millis()-start) == interruptionTime) {
+          openedValue = value;
+          break;
+        }
+      }
+    }
+    digitalWrite(openPin,LOW);
+    analogWrite(closePin,speed);
+    start = millis();
+    while (true) {
+      if (value != updateValueFine()) {
+        start = millis();
+        value = currentValue;
+      }
+      else {
+        // exit point from infinite while()
+        if ((millis()-start) == interruptionTime) {
+          closedValue = value;
+          break;
+        }
+      }
+    }
+    digitalWrite(closePin,LOW);
+    Serial.print("openedValue = ");
+    Serial.println(openedValue);
+    Serial.print("closedValue = ");
+    Serial.println(closedValue);
+    Serial.println("Boundaries was adjusted!");
+    Serial.println("!WARNING! Make sure that stvorka now in closed position, else change polarity of motor ")
+    return 0;
+  }
+  /**
+  *   Procedure to move stvorka element to the position readed by its potentiometr
+  */
+  short moveStvorkaTo(short targetValue, byte speed) {
+    if (targerValue != currentValue) {
+      if (checkValueWithinBoundaries(targetValue)) {
+        const byte TOLERANCE = 4;
+        if (targetValue > currentValue) {
+          analogWrite(openPin, speed);
+          digitalWrite(closePin, LOW);
+        }
+        else {
+          analogWrite(closePin, speed);
+          digitalWrite(openPin, LOW);
+        }
+        while (abs(targetValue-updateValueFine()) <= TOLERANCE);
+      }
+    }
+    return currentValue;
+  }
+  /**
+  *   Returns bool which says that value lays between openedValue & closedValue
+  */
+  bool checkValueWithinBoundaries(short value) {
+    if ((value >= closedValue) && (value <= openedValue)) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+  /**
+  *   Returns true/false if stvorka is opened
+  */
+  bool isOpened() {
+    const byte TOLERANCE = 4;
+    return currentValue <= TOLERANCE;
+  }
+};

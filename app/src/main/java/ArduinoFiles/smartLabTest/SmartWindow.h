@@ -1,12 +1,12 @@
 #include "Arduino.h"
 class SmartWindow {
 private:
-  int motorPin1;
-  int motorPin2;
-  int potPin;
-  int openedVal;
-  int closedVal;
-  int curVal;
+  byte motorPin1;
+  byte motorPin2;
+  byte potPin;
+  byte openedVal;
+  byte closedVal;
+  byte curVal;
   bool opened;
 public:
 //todo добавить получение статуса (открыто/закрыто)
@@ -45,48 +45,43 @@ public:
   }
 
   void open() {
-    Serial.println("opening window...");
-    Serial.print("windowCurVal");
-    Serial.print(" : ");
-    Serial.println(curVal);
-    Serial.print("window openedVal");
-    Serial.print(" : ");
-    Serial.println(openedVal);
+    const byte TOLARATE_VALUE = 16;
+    digitalWrite(motorPin1, HIGH);
+    //digitalWrite(motorPin2, LOW);
     while (curVal > openedVal) {
-      digitalWrite(motorPin1, HIGH);
-      digitalWrite(motorPin2, LOW);
       int potValue = analogRead(potPin);
-      if (abs(curVal - potValue) >= 10) {
-        Serial.print("potValue = ");
-        Serial.println(potValue);
+      if (abs(curVal - potValue) >= TOLARATE_VALUE) {
         curVal = potValue;
       }
     }
     opened = 1;
-    Serial.print("myWindow.isOpened()");
-    Serial.print(" = ");
-    Serial.println(SmartWindow::isOpened());
     digitalWrite(motorPin1, LOW);
-    digitalWrite(motorPin2, LOW);
-    Serial.println("window is opened!");
+    //digitalWrite(motorPin2, LOW);
+  }
+
+  void moveToValue(byte goalValue) {
+    const byte TOLARATE_VALUE = 16;
+    if ((curVal - goalValue) < 0) {
+      // move to open
+    }
+    else {
+      // move to close
+    }
   }
 
   void close() {
-    Serial.println("closing window...");
+    const byte TOLARATE_VALUE = 16;
+    //digitalWrite(motorPin1, LOW);
+    digitalWrite(motorPin2, HIGH);
     while (curVal < closedVal) {
-      digitalWrite(motorPin1, LOW);
-      digitalWrite(motorPin2, HIGH);
       int potValue = analogRead(potPin);
-      if (abs(curVal - potValue) >= 10) {
-        Serial.print("potValue = ");
-        Serial.println(potValue);
+      if (abs(curVal - potValue) >= TOLARATE_VALUE) {
         curVal = potValue;
       }
     }
     opened = 0;
-    digitalWrite(motorPin1, LOW);
+    //digitalWrite(motorPin1, LOW);
     digitalWrite(motorPin2, LOW);
-    Serial.println("window is closed!");
   }
 
   SmartWindow() {}
