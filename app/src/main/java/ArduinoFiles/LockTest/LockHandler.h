@@ -14,16 +14,15 @@ private:
   // PASSWORD
   char password[8];       // min 3 (preferable), max 8
   uint32_t hashPassword;  // hash value from hashDJB2(password)
-  uint8_t countChar;      // count for filled password characters
+  uint8_t countChar = 0;      // count for filled password characters
   uint8_t lengthOfPassword;
+  uint8_t lockCounter = 0;
   // BOOLEAN VALUES
   boolean locked;                  // boolean value that shows door locked or not
   boolean stateWritePass = false;  // boolean value that shows password is currently filling or not
-  boolean stateLocking = false;    // boolean value that helps in checking time for closing lock
   // 32 bit long value to check time out when requesting enter
   uint32_t timeRequest;
-  uint32_t time_ms;
-  uint16_t timeOut = 10000;
+  const uint16_t TIMEOUT = 10000;
   /**
         Writes charDigit in password[8] if countChar < lengthOfPassword, return countChar == lengthOfPassword
     */
@@ -31,9 +30,10 @@ private:
     if (countChar < lengthOfPassword) {
       password[countChar++] = charDigit;
     }
-    digitalWrite(ledPins[1], HIGH);
-    delay(100);
-    digitalWrite(ledPins[1], LOW);
+    digitalWrite(ledPins[0], HIGH);
+    delay(50);
+    digitalWrite(ledPins[0], LOW);
+    Serial.println(password);
     return countChar >= lengthOfPassword;
   }
   /**
@@ -45,6 +45,7 @@ private:
     }
     bufferChar = NO_KEY;
     countChar = 0;
+    lockCounter = 0;
   }
   /**
         Turns D-latch on button to boolean value
@@ -59,12 +60,13 @@ private:
   /**
         Hash function, returns uint32_t hash value from char* str
     */
-  unsigned long hashDJB2(char* str) {
-    unsigned long hash = 5381;
+  uint32_t hashDJB2(char* str) {
+    uint32_t hash = 5381;
     int c;
     while ((c = *str++)) {
       hash = ((hash << 5) + hash) + c;  // hash * 33 + c
     }
+    Serial.println(hash);
     return hash;
   }
   /**
@@ -72,10 +74,15 @@ private:
     */
   void grantAccess() {
     locked = false;
-    digitalWrite(ledPins[0], LOW);
-    digitalWrite(ledPins[1], HIGH);
-    delay(1000);
+    stateWritePass = false;
+    setButtonValue(LOW);
+    resetPassword();
     digitalWrite(ledPins[1], LOW);
+    digitalWrite(ledPins[0], HIGH);
+    delay(1000);
+    digitalWrite(ledPins[0], LOW);
+    Serial.println("Grant Access");
+    delay(500);
   }
   /**
     Procedure that complete some action when need to revoke Access to the room
@@ -83,6 +90,27 @@ private:
   void revokeAccess() {
     locked = true;
     digitalWrite(ledPins[1],HIGH);
+    Serial.println("Revoke Access");
+    delay(500);
+  }
+  /**
+    Procedure that complete some action when need to repeat grantAccess() action
+  */
+  void repeatAction() {
+    digitalWrite(ledPins[0],HIGH);
+    delay(100);
+    digitalWrite(ledPins[0],LOW);
+    Serial.println("repeat Action");
+    delay(500);
+  }
+
+  void accessDenied() {
+    resetPassword();
+    digitalWrite(ledPins[1],LOW);
+    delay(100);
+    digitalWrite(ledPins[1],HIGH);
+    Serial.println("Access Denied");
+    delay(500);
   }
 public:
   uint8_t getLockedState() {
@@ -101,45 +129,52 @@ public:
     hashPassword = hashDJB2(password);
     lengthOfPassword = length;
     specialSymbol = _specialSymbol;
-    revokeAccess();
-
-
     pinMode(butPinIn, OUTPUT);
     pinMode(butPinOut, INPUT);
     pinMode(ledPins[0], OUTPUT);
     pinMode(ledPins[1], OUTPUT);
+
+    setButtonValue(LOW);
+    revokeAccess();
   }
   /**
-        Returns true if button is true OR keypad got Key pressed, otherwise false
-    */
+    Returns true if button is true OR keypad got Key pressed, otherwise false
+  */
   boolean checkInteraction() {
-    bufferChar = this_keypad->getKey();
-    return digitalRead(butPinOut) || (bufferChar != NO_KEY);
+    return digitalRead(butPinOut) || getBufferChar();
   }
   /**
-        Returns true if symbol pressed on keypad or in bufferChar equals symbol, otherwise false
-    */
-  boolean checkSymbol(char symbol) {
-    if (bufferChar == NO_KEY) {
-      bufferChar = this_keypad->getKey();
-    }
-    if (bufferChar == symbol) {
+    Return true if this_keypad returns char != NO_KEY, otherwise returns false.
+    This char writes to bufferChar
+  */
+  boolean getBufferChar() {
+    bufferChar = this_keypad->getKey();
+    if (bufferChar != NO_KEY) {
       return true;
     }
     return false;
   }
   /**
-        Procedure that changes password
-    */
-  void changePassword(char* newPassword, uint8_t length) {
-    lengthOfPassword = length;
-    hashPassword = hashDJB2(newPassword);
+    Procedure that changes password; max length of password is 8
+  */
+  void setPassword(char* newPassword, uint8_t length) {
+    char* bufferPassword = new char[8];
+    for (uint8_t i = 0; (i < 8)&&(i < length); i++) {
+      bufferPassword[i] = newPassword[i];
+    }
+    if (length > 8) {
+      lengthOfPassword = 8;
+    }
+    else {
+      lengthOfPassword = length;
+    }
+    hashPassword = hashDJB2(bufferPassword);
     countChar = 0;
     stateWritePass = false;
   }
   /**
-        Procedure that runs in loop(), 
-    */
+    Procedure that runs in loop(), 
+  */
   int8_t lockListener() {
     if (locked) {
       if (stateWritePass == false) {
@@ -150,6 +185,7 @@ public:
           }
           stateWritePass = true;
           timeRequest = millis();
+          Serial.println("Access request");
           return 1;
         }
         return 0;
@@ -157,22 +193,30 @@ public:
         if (digitalRead(butPinOut) == LOW) {
           stateWritePass = false;
           resetPassword();
+          Serial.println("Request abort");
           return -1;
         } else {
-          bufferChar = this_keypad->getKey();
-          if (bufferChar != NO_KEY) {
+          if (getBufferChar()) {
             timeRequest = millis();
             if (writeCharPass(bufferChar)) {
+              digitalWrite(ledPins[0],HIGH);
+              delay(100);
+              digitalWrite(ledPins[0],LOW);
               if (hashPassword == hashDJB2(password)) {
                 grantAccess();
                 return 1;
               }
+              else {
+                accessDenied();
+                return -1;
+              }
             }
           }
-          if (millis() - timeRequest >= timeOut) {
+          if (millis() - timeRequest >= TIMEOUT) {
             stateWritePass = false;
             resetPassword();
             setButtonValue(LOW);
+            Serial.println("Request timeout");
             return -1;
           }
           return 0;
@@ -180,25 +224,18 @@ public:
       }
     } else {
       if (checkInteraction() == true) {
-        if (checkSymbol(specialSymbol)) {
-          if (stateLocking == false) {
-            time_ms = millis();
-            stateLocking = true;
-          } else {
-            if (millis() - time_ms >= 3000) {
-              locked = true;
-              stateLocking = false;
-              digitalWrite(ledPins[0], HIGH);
-              delay(1000);
-              return 1;
-            }
+        if (bufferChar == specialSymbol) {
+          lockCounter++;
+          if (lockCounter >= 3) {
+            revokeAccess();
+            return -1;
           }
-        } else {
-          stateLocking = false;
-          digitalWrite(ledPins[1], HIGH);
-          delay(1000);
-          digitalWrite(ledPins[0], LOW);
+        }
+        else {
+          lockCounter = 0;
+          repeatAction();
           setButtonValue(LOW);
+          return 0;
         }
       }
       return 0;
