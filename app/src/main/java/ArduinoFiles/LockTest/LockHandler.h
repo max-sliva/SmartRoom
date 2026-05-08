@@ -12,7 +12,8 @@ private:
   // KEYPAD
   Keypad* this_keypad;
   // PASSWORD
-  char password[8];       // min 3 (preferable), max 8
+  const uint8_t maxLengthPassword = 8;
+  char password[maxLengthPassword];       // min 3 (preferable), max 8
   uint32_t hashPassword;  // hash value from hashDJB2(password)
   uint8_t countChar = 0;      // count for filled password characters
   uint8_t lengthOfPassword;
@@ -40,7 +41,7 @@ private:
         Procedure that resets password to all 0 & sets countChar at 0
     */
   void resetPassword() {
-    for (uint8_t i = 0; i < 8; i++) {
+    for (uint8_t i = 0; i < maxLengthPassword; i++) {
       password[i] = 0;
     }
     bufferChar = NO_KEY;
@@ -144,6 +145,18 @@ public:
     return digitalRead(butPinOut) || getBufferChar();
   }
   /**
+    Returns true if hash of _password by hashDJB2() == hashPassword 
+  */
+  boolean checkHashPassword(char* _password) {
+    return hashPassword == hashDJB2(_password);
+  }
+  /**
+    Returns true if hash == hashPassword; otherwise false
+  */
+  boolean checkHashPassword(uint32_t hash) {
+    return hashPassword == hashDJB2;
+  }
+  /**
     Return true if this_keypad returns char != NO_KEY, otherwise returns false.
     This char writes to bufferChar
   */
@@ -158,12 +171,12 @@ public:
     Procedure that changes password; max length of password is 8
   */
   void setPassword(char* newPassword, uint8_t length) {
-    char* bufferPassword = new char[8];
-    for (uint8_t i = 0; (i < 8)&&(i < length); i++) {
+    char bufferPassword[maxLengthPassword];
+    for (uint8_t i = 0; (i < maxLengthPassword)&&(i < length); i++) {
       bufferPassword[i] = newPassword[i];
     }
-    if (length > 8) {
-      lengthOfPassword = 8;
+    if (length > maxLengthPassword) {
+      lengthOfPassword = maxLengthPassword;
     }
     else {
       lengthOfPassword = length;
@@ -202,7 +215,7 @@ public:
               digitalWrite(ledPins[0],HIGH);
               delay(100);
               digitalWrite(ledPins[0],LOW);
-              if (hashPassword == hashDJB2(password)) {
+              if (checkHashPassword(password)) {
                 grantAccess();
                 return 1;
               }
