@@ -2,6 +2,8 @@
 #include <Keypad.h>
 #include <stdint.h>
 
+#define MAXLENGTHPASSWORD 8
+
 class LockHandler {
 private:
   char bufferChar;     // buffer char for this_keypad->getKey()
@@ -12,8 +14,7 @@ private:
   // KEYPAD
   Keypad* this_keypad;
   // PASSWORD
-  const uint8_t maxLengthPassword = 8;
-  char password[maxLengthPassword];       // min 3 (preferable), max 8
+  char password[MAXLENGTHPASSWORD];       // min 3 (preferable), max 8
   uint32_t hashPassword;  // hash value from hashDJB2(password)
   uint8_t countChar = 0;      // count for filled password characters
   uint8_t lengthOfPassword;
@@ -41,7 +42,7 @@ private:
         Procedure that resets password to all 0 & sets countChar at 0
     */
   void resetPassword() {
-    for (uint8_t i = 0; i < maxLengthPassword; i++) {
+    for (uint8_t i = 0; i < MAXLENGTHPASSWORD; i++) {
       password[i] = 0;
     }
     bufferChar = NO_KEY;
@@ -54,7 +55,7 @@ private:
   void setButtonValue(boolean value) {
     if (digitalRead(butPinOut) != value) {
       digitalWrite(butPinIn, HIGH);
-      delay(100);
+      delay(50);
       digitalWrite(butPinIn, LOW);
     }
   }
@@ -80,8 +81,6 @@ private:
     resetPassword();
     digitalWrite(ledPins[1], LOW);
     digitalWrite(ledPins[0], HIGH);
-    delay(1000);
-    digitalWrite(ledPins[0], LOW);
     Serial.println("Grant Access");
     delay(500);
   }
@@ -90,6 +89,7 @@ private:
   */
   void revokeAccess() {
     locked = true;
+    digitalWrite(ledPins[0],LOW);
     digitalWrite(ledPins[1],HIGH);
     Serial.println("Revoke Access");
     delay(500);
@@ -98,9 +98,9 @@ private:
     Procedure that complete some action when need to repeat grantAccess() action
   */
   void repeatAction() {
-    digitalWrite(ledPins[0],HIGH);
-    delay(100);
     digitalWrite(ledPins[0],LOW);
+    delay(100);
+    digitalWrite(ledPins[0],HIGH);
     Serial.println("repeat Action");
     delay(500);
   }
@@ -154,7 +154,7 @@ public:
     Returns true if hash == hashPassword; otherwise false
   */
   boolean checkHashPassword(uint32_t hash) {
-    return hashPassword == hashDJB2;
+    return hashPassword == hash;
   }
   /**
     Return true if this_keypad returns char != NO_KEY, otherwise returns false.
@@ -171,12 +171,12 @@ public:
     Procedure that changes password; max length of password is 8
   */
   void setPassword(char* newPassword, uint8_t length) {
-    char bufferPassword[maxLengthPassword];
-    for (uint8_t i = 0; (i < maxLengthPassword)&&(i < length); i++) {
+    char bufferPassword[MAXLENGTHPASSWORD];
+    for (uint8_t i = 0; (i < MAXLENGTHPASSWORD)&&(i < length); i++) {
       bufferPassword[i] = newPassword[i];
     }
-    if (length > maxLengthPassword) {
-      lengthOfPassword = maxLengthPassword;
+    if (length > MAXLENGTHPASSWORD) {
+      lengthOfPassword = MAXLENGTHPASSWORD;
     }
     else {
       lengthOfPassword = length;
@@ -239,6 +239,9 @@ public:
       if (checkInteraction() == true) {
         if (bufferChar == specialSymbol) {
           lockCounter++;
+          digitalWrite(ledPins[1],HIGH);
+          delay(100);
+          digitalWrite(ledPins[1],LOW);
           if (lockCounter >= 3) {
             revokeAccess();
             return -1;
