@@ -34,7 +34,6 @@ private:
         if (thisSerial->available() > 0) {
           ms = millis();
           dataArray[i++] = thisSerial->read();
-          Serial.println("2");
         }
         if ((millis() - ms) >= 5) {
           break;
@@ -50,8 +49,7 @@ public:
     thisSerial = serial;
 
     while (thisSerial->available() > 0) {
-      thisSerial->read();
-      Serial.println("3"); 
+      thisSerial->read(); 
     }
   }
   // PROCEDURES TO WORK WITH DATAARRAY
@@ -115,7 +113,6 @@ public:
     */
   void serialListener() {
     if (thisSerial->available() > 0) {
-      Serial.println("1");
       if (thisSerial->read() == 0xFF) {
         ms = 0;
         while (ms < 2) {
