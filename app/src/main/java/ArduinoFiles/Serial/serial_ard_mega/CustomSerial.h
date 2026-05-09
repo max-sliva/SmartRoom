@@ -64,7 +64,7 @@ public:
   /**
     Procedure serializes data to send as Recieve, sends that dataArray to thisSerial
   */
-  void sendFunction(uint8_t comma, uint8_t data, uint8_t length) {
+  void sendReceive (uint8_t comma, uint8_t data, uint8_t length) {
     dataArray[0] = 0x00;
     dataArray[1] = comma;
     dataArray[2] = length;
