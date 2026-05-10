@@ -12,7 +12,7 @@ private:
 
   uint8_t buffer[2];
   uint8_t dataArray[LENGTHBUFFER];  // buffer dataArray
-  uint32_t ms;                      // buffer
+  uint32_t msBuffer;                      // buffer
   void (*receiveFunc)(int8_t, uint8_t) = nullptr;
   void (*requestFunc)(int8_t, uint8_t) = nullptr;
   /**
@@ -27,17 +27,20 @@ private:
     Procedure that reads from thisSerial to dataArray by length
   */
   void readToDataArray(uint8_t length) {
-    if (thisSerial->available() > 0) {
-      ms = millis();
-      uint8_t i = 0;
-      while (i < length) {
-        if (thisSerial->available() > 0) {
-          ms = millis();
-          dataArray[i++] = thisSerial->read();
-        }
-        if ((millis() - ms) >= 5) {
+    uint8_t i = 0;
+    boolean loopState = true;
+    msBuffer = millis();
+    while (loopState) {
+      while(thisSerial->available() > 0) {
+        dataArray[i++] = thisSerial->read();
+        msBuffer = millis();
+        if (i > length) {
+          loopState = false;
           break;
         }
+      }
+      if ((millis() - msBuffer) > 100) {
+        break;
       }
     }
   }
@@ -114,10 +117,10 @@ public:
   void serialListener() {
     if (thisSerial->available() > 0) {
       if (thisSerial->read() == 0xFF) {
-        ms = 0;
-        while (ms < 2) {
+        msBuffer = 0;
+        while (msBuffer < 2) {
           if (thisSerial->available() > 0) {
-            buffer[ms++] = thisSerial->read();
+            buffer[msBuffer++] = thisSerial->read();
           }
         }
         if (buffer[0] > 0x7F) {
