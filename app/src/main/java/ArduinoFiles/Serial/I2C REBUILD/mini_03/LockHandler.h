@@ -2,7 +2,13 @@
 #include <Keypad.h>
 #include <stdint.h>
 
+#ifndef LockHandler_h
+#define LockHandler_h
 #define MAXLENGTHPASSWORD 8
+
+#ifndef actionProcedures_h
+#include "actionProcedures.h"
+#endif
 
 class LockHandler {
 private:
@@ -35,7 +41,6 @@ private:
     digitalWrite(ledPins[0], HIGH);
     delay(50);
     digitalWrite(ledPins[0], LOW);
-    Serial.println(password);
     return countChar >= lengthOfPassword;
   }
   /**
@@ -68,7 +73,6 @@ private:
     while ((c = *str++)) {
       hash = ((hash << 5) + hash) + c;  // hash * 33 + c
     }
-    Serial.println(hash);
     return hash;
   }
   /**
@@ -81,7 +85,7 @@ private:
     resetPassword();
     digitalWrite(ledPins[1], LOW);
     digitalWrite(ledPins[0], HIGH);
-    Serial.println("Grant Access");
+    grantAccessAction();
     delay(500);
   }
   /**
@@ -91,17 +95,17 @@ private:
     locked = true;
     digitalWrite(ledPins[0],LOW);
     digitalWrite(ledPins[1],HIGH);
-    Serial.println("Revoke Access");
+    revokeAccessAction();
     delay(500);
   }
   /**
     Procedure that complete some action when need to repeat grantAccess() action
   */
-  void repeatAction() {
+  void repeatAccess() {
     digitalWrite(ledPins[0],LOW);
     delay(100);
+    repeatAccessAction();
     digitalWrite(ledPins[0],HIGH);
-    Serial.println("repeat Action");
     delay(500);
   }
 
@@ -110,7 +114,7 @@ private:
     digitalWrite(ledPins[1],LOW);
     delay(100);
     digitalWrite(ledPins[1],HIGH);
-    Serial.println("Access Denied");
+    accessDeniedAction();
     delay(500);
   }
 public:
@@ -197,8 +201,8 @@ public:
             writeCharPass(bufferChar);
           }
           stateWritePass = true;
+          requestAccessAction();
           timeRequest = millis();
-          Serial.println("Access request");
           return 1;
         }
         return 0;
@@ -206,7 +210,7 @@ public:
         if (digitalRead(butPinOut) == LOW) {
           stateWritePass = false;
           resetPassword();
-          Serial.println("Request abort");
+          requestAbortAction();
           return -1;
         } else {
           if (getBufferChar()) {
@@ -229,7 +233,7 @@ public:
             stateWritePass = false;
             resetPassword();
             setButtonValue(LOW);
-            Serial.println("Request timeout");
+            timeOutAction();
             return -1;
           }
           return 0;
@@ -249,7 +253,7 @@ public:
         }
         else {
           lockCounter = 0;
-          repeatAction();
+          repeatAccess();
           setButtonValue(LOW);
           return 0;
         }
@@ -258,3 +262,5 @@ public:
     }
   }
 };
+
+#endif

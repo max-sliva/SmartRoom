@@ -22,5 +22,5 @@ void setup() {
 }
 
 void loop() {
-  myLocker->lockListener();
+  myLocker->lockListen();
 }

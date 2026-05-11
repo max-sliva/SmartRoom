@@ -1,4 +1,5 @@
 /**
+  MAIN CONTROLLER: ISKRA ARDUINO MEGA 2560
   INCLUDES:
   NEXTION, CUSTOMSERIAL, FANELEMENT
 */
@@ -14,14 +15,12 @@ FanElement fan(12,50);
 const char* names[10] = {"h0.val","h1.val","h2.val","va0.val",
   "h0.bco","h0.bco1","h1.bco","h1.bco1","h2.bco","h2.bco1"};
 uint16_t colors[4] = {36415,1055,50712,31727};
-uint8_t values[4] = {0xFF,0xFF,0xFF,1};
+uint8_t values[4] = {0xFF,0xFF,0xFF,0};
 
 uint8_t colNum;
 uint32_t time_ms = 0;
 
 void updateTextLabelsNextion() {
-  // myNex.writeNum("t0.txt",offProcCString(values[0]));
-  // myNex.writeNum("t1.txt",offProcCString(fan.getValue()));
   String buffer;
   if (values[0] > 0) {
     buffer = String(map(values[0],0,255,0,100)) + "\%"; 
@@ -39,11 +38,33 @@ void updateTextLabelsNextion() {
   myNex.writeStr("t1.txt=\"" + buffer + "\"");
 }
 
+void packageHandler(uint8_t comma, uint8_t data) {
+  switch (comma) {
+    // COMMAND TO SEND LEDS VALUES TO ARD MINI
+    case 0:
+      uint8_t length;
+      mySerial.resetDataArray();
+      if (values[3] == 0) {
+        mySerial.sendPackage(0,values[0]);
+      }
+      else {
+        mySerial.setDataElem(values[1],0);
+        mySerial.setDataElem(values[2],1);
+        mySerial.sendPackageExtra(0,length);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);   // Must match Nextion baud rate
-  myNex.begin(115200);    // NEXTION
-  Serial2.begin(115200);  // CUSTOMSERIAL TO ARD MINI
+  Serial.begin(115200);     // Must match Nextion baud rate
+  myNex.begin(115200);      // NEXTION
+  mySerial.begin(115200);   // CUSTOMSERIAL TO ARD MINI
+  while (!Serial2);         // MUSTHAVE
+  mySerial.onPackage(packageHandler);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
