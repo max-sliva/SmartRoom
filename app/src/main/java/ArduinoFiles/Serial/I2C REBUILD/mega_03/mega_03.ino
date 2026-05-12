@@ -8,6 +8,8 @@
 #include "FanElement.h"
 #include "CustomSerial.h"
 
+#define RX2 16 
+
 EasyNex myNex(Serial3);
 CustomSerial mySerial(&Serial2);
 FanElement fan(12,50);
@@ -17,6 +19,7 @@ const char* names[10] = {"h0.val","h1.val","h2.val","va0.val",
 uint16_t colors[4] = {36415,1055,50712,31727};
 uint8_t values[4] = {0xFF,0xFF,0xFF,0};
 
+boolean extPower = false;
 uint8_t colNum;
 uint32_t time_ms = 0;
 
@@ -62,8 +65,12 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
-  mySerial.begin(115200);   // CUSTOMSERIAL TO ARD MINI
-  while (!Serial2);         // MUSTHAVE
+  //mySerial.begin(115200);   // CUSTOMSERIAL TO ARD MINI
+
+  // EMERGENCY
+  pinMode(A5, INPUT);
+
+  // while (!Serial2);         // MUSTHAVE
   mySerial.onPackage(packageHandler);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
@@ -91,6 +98,15 @@ void loop() {
     myNex.writeNum(names[0],values[0]);
     myNex.writeNum(names[1],fan.getValue());
     updateTextLabelsNextion();
+  }
+  if ((extPower == false)&&(analogRead(A5) > 200)) {
+    extPower = true;
+    while (!Serial2);
+    Serial2.begin(115200);
+  }
+  if ((extPower == true)&&(analogRead(A5) < 200)) {
+    extPower = false;
+    Serial2.end();
   }
 }
 

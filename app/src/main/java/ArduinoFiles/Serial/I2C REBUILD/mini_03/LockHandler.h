@@ -95,7 +95,7 @@ private:
     locked = true;
     digitalWrite(ledPins[0],LOW);
     digitalWrite(ledPins[1],HIGH);
-    revokeAccessAction();
+    //revokeAccessAction();
     delay(500);
   }
   /**
@@ -201,7 +201,8 @@ public:
             writeCharPass(bufferChar);
           }
           stateWritePass = true;
-          requestAccessAction();
+          Serial.println("Enter");
+          //requestAccessAction();
           timeRequest = millis();
           return 1;
         }
