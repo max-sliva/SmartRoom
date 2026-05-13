@@ -108,9 +108,10 @@ public:
   */
   void sendPackage(int8_t comma, uint8_t data) {
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
-      thisSerial->write(0xFF);
+      thisSerial->write(0xFF);  // opening byte
       thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
       thisSerial->write(data);
+      thisSerial->write(0xFF);  // closing byte
     }
   }
   /**
@@ -119,10 +120,11 @@ public:
   */
   void sendPackageExtra(int8_t comma, uint8_t length) {
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
-      thisSerial->write(0xFF);
+      thisSerial->write(0xFF);  // opening byte
       thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
       thisSerial->write(adjustToLength(length));
       writeFromDataArray(adjustToLength(length));
+      thisSerial->write(0xFF);   // closing byte
     }
   }
   void onPackage(void (*function)(uint8_t, uint8_t)) {
@@ -134,37 +136,35 @@ public:
   /**
         Procedure that runs in loop()
     */
-  void serialListen() {
-    if ((thisSerial!=nullptr)&&(*thisSerial)) {
+  uint8_t serialListen(void) {
+    if ((thisSerial==nullptr)||(*thisSerial)) {
+      return 1;
+    }
+    if (compareWithNextUartByte(0xFF) == false) {
+      return 1;
+    }
+    msBuffer = 0;
+    while (msBuffer < 2) {
       if (thisSerial->available() > 0) {
-        if (thisSerial->read() == 0xFF) {
-          msBuffer = 0;
-          while (msBuffer < 2) {
-            if (thisSerial->available() > 0) {
-              buffer[msBuffer++] = thisSerial->read();
-            }
-          }
-          if (buffer[0] > 0x7F) {
-            readToDataArray(buffer[1]);
-          }
-          msBuffer = millis();
-          if ((thisSerial->available() > 0)) {
-            if (thisSerial->read() == 0xFF) {
-              if (buffer[0] > 0x7F) {
-                if (extraFunc != nullptr) {
-                  extraFunc(buffer[0] & 0x7F, buffer[1]);
-                }
-              }
-              else {
-                if (packageFunc != nullptr) {
-                  packageFunc(buffer[0], buffer[1]);
-                } 
-              }
-            }
-          }
-        }
+        buffer[msBuffer++] = thisSerial->read();
       }
     }
+    if (buffer[0] > 0x7F) {
+      readToDataArray(buffer[1]);
+    }
+    if (compareWithNextUartByte(0xFF) == false) {
+      return 1;
+    }
+    if (buffer[0] > 0x7F) {
+      if (extraFunc != nullptr) {
+        extraFunc(buffer[0] & 0x7F, buffer[1]);
+      }
+    } else {
+      if (packageFunc != nullptr) {
+        packageFunc(buffer[0],buffer[1]);
+      }
+    }
+    return 0;
   }
 };
 

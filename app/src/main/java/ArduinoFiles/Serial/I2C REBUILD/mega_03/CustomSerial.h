@@ -8,7 +8,7 @@
 class CustomSerial {
 private:
   // this Hardware Serial to work with
-  HardwareSerial* thisSerial;
+  HardwareSerial* thisSerial = nullptr;
 
   uint8_t buffer[2];
   uint8_t dataArray[LENGTHBUFFER];  // buffer dataArray
@@ -39,6 +39,15 @@ private:
       }
     }
   }
+  /**
+    Returns true if readed byte from uart == uint8_t byte, if uart is not available returns false
+  */
+  boolean compareWithNextUartByte(uint8_t byte) {
+    if (thisSerial->available() > 0) {
+      return (thisSerial->read() == byte);
+    }
+    return false;
+  }
 public:
   /**
         Constructor with field
@@ -50,13 +59,17 @@ public:
     Begin thisSerial with uint32_t 'baud' rate
   */
   void begin(uint32_t baud) {
-    thisSerial->begin(baud);
+    if (thisSerial!=nullptr) {
+      thisSerial->begin(baud);
+    }
   }
   /**
     End thisSerial
   */
   void end() {
-    thisSerial->end();
+    if (thisSerial!=nullptr) {
+      thisSerial->end();
+    }
   }
   // PROCEDURES TO WORK WITH DATAARRAY
   /**
@@ -94,10 +107,11 @@ public:
     Max number of functions 128 bc of signed char
   */
   void sendPackage(int8_t comma, uint8_t data) {
-    if (*thisSerial) {
-      thisSerial->write(0xFF);
+    if ((thisSerial!=nullptr)&&(*thisSerial)) {
+      thisSerial->write(0xFF);  // opening byte
       thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
       thisSerial->write(data);
+      thisSerial->write(0xFF);  // closing byte
     }
   }
   /**
@@ -105,11 +119,12 @@ public:
     Max number of functions is 128 bc of signed char
   */
   void sendPackageExtra(int8_t comma, uint8_t length) {
-    if (*thisSerial) {
-      thisSerial->write(0xFF);
+    if ((thisSerial!=nullptr)&&(*thisSerial)) {
+      thisSerial->write(0xFF);  // opening byte
       thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
       thisSerial->write(adjustToLength(length));
       writeFromDataArray(adjustToLength(length));
+      thisSerial->write(0xFF);   // closing byte
     }
   }
   void onPackage(void (*function)(uint8_t, uint8_t)) {
@@ -121,29 +136,35 @@ public:
   /**
         Procedure that runs in loop()
     */
-  void serialListen() {
-    if (*thisSerial) {
+  uint8_t serialListen(void) {
+    if ((thisSerial==nullptr)||(*thisSerial)) {
+      return 1;
+    }
+    if (compareWithNextUartByte(0xFF) == false) {
+      return 1;
+    }
+    msBuffer = 0;
+    while (msBuffer < 2) {
       if (thisSerial->available() > 0) {
-        if (thisSerial->read() == 0xFF) {
-          msBuffer = 0;
-          while (msBuffer < 2) {
-            if (thisSerial->available() > 0) {
-              buffer[msBuffer++] = thisSerial->read();
-            }
-          }
-          if (buffer[0] > 0x7F) {
-            readToDataArray(buffer[1]);
-            if (extraFunc != nullptr) {
-              extraFunc(buffer[0] & 0x7F, buffer[1]);
-            }
-          } else {
-            if (packageFunc != nullptr) {
-              packageFunc(buffer[0], buffer[1]);
-            }
-          }
-        }
+        buffer[msBuffer++] = thisSerial->read();
       }
     }
+    if (buffer[0] > 0x7F) {
+      readToDataArray(buffer[1]);
+    }
+    if (compareWithNextUartByte(0xFF) == false) {
+      return 1;
+    }
+    if (buffer[0] > 0x7F) {
+      if (extraFunc != nullptr) {
+        extraFunc(buffer[0] & 0x7F, buffer[1]);
+      }
+    } else {
+      if (packageFunc != nullptr) {
+        packageFunc(buffer[0],buffer[1]);
+      }
+    }
+    return 0;
   }
 };
 
