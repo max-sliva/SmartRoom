@@ -6,10 +6,6 @@
 #define LockHandler_h
 #define MAXLENGTHPASSWORD 8
 
-#ifndef actionProcedures_h
-#include "actionProcedures.h"
-#endif
-
 class LockHandler {
 private:
   char bufferChar;     // buffer char for this_keypad->getKey()
@@ -31,63 +27,36 @@ private:
   // 32 bit long value to check time out when requesting enter
   uint32_t timeRequest;
   const uint16_t TIMEOUT = 10000;
+  // ARRAY OF POINTERS OF FUNCTIONS TO EXTEND POSSIBLE ACTIONS OF LOCKLISTEN:
+  // MAIN ACTIONS:        GRANTACCESS (0), REVOKEACCESS (1),
+  // SECONDARY ACTIONS:   REPEATACCESS (2), ACCESSDENIED (3),
+  // CONTROL ACTIONS:     REQUESTACCESS(4), TIMEOUT(5), ABORTREQUEST(6)
+  enum Actions {GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+   ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST};
+  void (*actionsNodes[7])();
+  // Writes charDigit in password[8] if countChar < lengthOfPassword, return countChar == lengthOfPassword
+  boolean writeCharPass(char charDigit);
+  // Procedure that resets password to all 0 & sets countChar at 0
+  void resetPassword();
+  // Turns D-latch on button to boolean value
+  void setButtonValue(boolean value);
+  // Hash function, returns uint32_t hash value from char* str
+  uint32_t hashDJB2(char* str);
+  /** procedure to pass pointer of additional action on type of Actions
+    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+    ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST
+  */
+  void onAction(void (*function)(), Actions action);
+  /** procedure to call passed pointers of function of action on type of Actions
+    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+    ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST
+  */
+  void callAction(Actions action);
   /**
-        Writes charDigit in password[8] if countChar < lengthOfPassword, return countChar == lengthOfPassword
-    */
-  boolean writeCharPass(char charDigit) {
-    if (countChar < lengthOfPassword) {
-      password[countChar++] = charDigit;
-    }
-    digitalWrite(ledPins[0], HIGH);
-    delay(50);
-    digitalWrite(ledPins[0], LOW);
-    return countChar >= lengthOfPassword;
-  }
-  /**
-        Procedure that resets password to all 0 & sets countChar at 0
-    */
-  void resetPassword() {
-    for (uint8_t i = 0; i < MAXLENGTHPASSWORD; i++) {
-      password[i] = 0;
-    }
-    bufferChar = NO_KEY;
-    countChar = 0;
-    lockCounter = 0;
-  }
-  /**
-        Turns D-latch on button to boolean value
-    */
-  void setButtonValue(boolean value) {
-    if (digitalRead(butPinOut) != value) {
-      digitalWrite(butPinIn, HIGH);
-      delay(50);
-      digitalWrite(butPinIn, LOW);
-    }
-  }
-  /**
-        Hash function, returns uint32_t hash value from char* str
-    */
-  uint32_t hashDJB2(char* str) {
-    uint32_t hash = 5381;
-    int c;
-    while ((c = *str++)) {
-      hash = ((hash << 5) + hash) + c;  // hash * 33 + c
-    }
-    return hash;
-  }
-  /**
-        Procedure that complete some action when need to grant Access to the room
-    */
-  void grantAccess() {
-    locked = false;
-    stateWritePass = false;
-    setButtonValue(LOW);
-    resetPassword();
-    digitalWrite(ledPins[1], LOW);
-    digitalWrite(ledPins[0], HIGH);
-    grantAccessAction();
-    delay(500);
-  }
+    Procedure that calls when Access granted by LockHandler,
+    calls action GRANTACCESS if not nullptr
+  */
+  void grantAccess();
   /**
     Procedure that complete some action when need to revoke Access to the room
   */
@@ -134,6 +103,11 @@ public:
     hashPassword = hashDJB2(password);
     lengthOfPassword = length;
     specialSymbol = _specialSymbol;
+
+    for (uint8_t i = 0; i < 7; i++) {
+      actionNodes[i] = nullptr;
+    }
+
     pinMode(butPinIn, OUTPUT);
     pinMode(butPinOut, INPUT);
     pinMode(ledPins[0], OUTPUT);
