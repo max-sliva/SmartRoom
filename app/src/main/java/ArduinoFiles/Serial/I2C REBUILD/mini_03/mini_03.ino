@@ -22,7 +22,6 @@ LedHandler myLeds(NUMBEROFLEDS, ledPins);
 LockHandler* myLocker;
 CustomSerial mySerial(&Serial);
 
-
 void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
     case 0:
@@ -43,16 +42,26 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
     case 1:
       myLeds.setValue(mySerial.getDataElem(0), mySerial.getDataElem(1), 1000);
       break;
+    case 2:
+      char buffer[8];
+      for (uint8_t i = 0; i < length;i++) {
+        buffer[i] = mySerial.getDataElem(i);
+      }
+      mySerial.sendPackage(1,myLocker->checkHashPassword(buffer));
     default:
       break;
   }
+} 
+
+void sendLockState() {
+  mySerial.resetDataArray();
+  mySerial.setDataElem(myLocker->getLockedState(), 0);
+  mySerial.setDataElem(myLocker->getStateWritePass(), 1);
+  mySerial.sendPackageExtra(0,2);
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  mySerial.begin(9600);  // CUSTOMSERIAL TO ARD MEGA
-  while (!Serial);  // MUSTHAVE
-  Serial.println("Serial begin");
+  // put your setup code here, to run once
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
   // INIT KEYPAD
@@ -60,22 +69,27 @@ void setup() {
                         new uint8_t[3]{ 4, 9, 12 }, new uint8_t[4]{ 7, 3, 2, 8 }, 3, 4);
   myLocker = new LockHandler(13, A0, new uint8_t[2]{ A4, A5 },
                      myKeypad, "1234", 4, keymap[2][3]);
-  pinMode(A7,INPUT);
+  myLocker->onAction(sendLockState,LockHandler::GRANTACCESS);
+  myLocker->onAction(sendLockState,LockHandler::REVOKEACCESS);
+  myLocker->onAction(sendLockState,LockHandler::REQUESTACCESS);
+  myLocker->onAction(sendLockState,LockHandler::REQUESTABORT);
+  myLocker->onAction(sendLockState,LockHandler::TIMEOUT);
+  pinMode(A7,INPUT);    // analog input for checking state of activation of ard mega
+  pinMode(5,OUTPUT);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //mySerial.serialListen();
+  mySerial.serialListen();
   myLocker->lockListen();
-  // if ((extPower == false)&&(analogRead(A7)>150)) {
-  //   extPower = true;
-  //   Serial.begin(115200);
-  //   while (!Serial);
-  //   mySerial.sendPackage(0, 0); // SENDING REQUEST TO GET LED VALUE IF MEGA ACTIVE
-
-  // }
-  // if ((extPower == true)&&(analogRead(A7)<150)) {
-  //   extPower = false;
-  //   Serial.end();
-  // }
+  if ((extPower == false)&&(analogRead(A7)>500)) {
+    extPower = true;
+    mySerial.begin(115200);
+    while (!Serial);
+    mySerial.sendPackage(0, 0); // SENDING REQUEST TO GET LED VALUE IF MEGA ACTIVE
+  }
+  if ((extPower == true)&&(analogRead(A7)<500)) {
+    extPower = false;
+    mySerial.end();
+  }
 }

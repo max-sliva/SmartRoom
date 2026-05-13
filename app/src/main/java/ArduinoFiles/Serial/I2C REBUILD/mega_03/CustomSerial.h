@@ -3,7 +3,7 @@
 
 #ifndef CustomSerial_h
 #define CustomSerial_h
-#define LENGTHBUFFER 32
+#define LENGTHBUFFER 16
 
 class CustomSerial {
 private:
@@ -12,7 +12,7 @@ private:
 
   uint8_t buffer[2];
   uint8_t dataArray[LENGTHBUFFER];  // buffer dataArray
-  uint32_t msBuffer;                      // buffer
+  uint32_t msBuffer;                // buffer
   void (*packageFunc)(int8_t, uint8_t) = nullptr;
   void (*extraFunc)(int8_t, uint8_t) = nullptr;
   /**
@@ -30,7 +30,7 @@ private:
     uint8_t i = 0;
     boolean loopState = true;
     while (loopState) {
-      while(thisSerial->available() > 0) {
+      while (thisSerial->available() > 0) {
         dataArray[i++] = thisSerial->read();
         if (i >= length) {
           loopState = false;
@@ -45,16 +45,18 @@ public:
     */
   CustomSerial(HardwareSerial* serial) {
     thisSerial = serial;
-
-    while (thisSerial->available() > 0) {
-      thisSerial->read(); 
-    }
   }
   /**
     Begin thisSerial with uint32_t 'baud' rate
   */
   void begin(uint32_t baud) {
     thisSerial->begin(baud);
+  }
+  /**
+    End thisSerial
+  */
+  void end() {
+    thisSerial->end();
   }
   // PROCEDURES TO WORK WITH DATAARRAY
   /**
@@ -92,19 +94,23 @@ public:
     Max number of functions 128 bc of signed char
   */
   void sendPackage(int8_t comma, uint8_t data) {
-    thisSerial->write(0xFF);
-    thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
-    thisSerial->write(data);
+    if (*thisSerial) {
+      thisSerial->write(0xFF);
+      thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
+      thisSerial->write(data);
+    }
   }
   /**
     Procedure serializes data to send as Request, sends that dataArray to thisSerial,
     Max number of functions is 128 bc of signed char
   */
   void sendPackageExtra(int8_t comma, uint8_t length) {
-    thisSerial->write(0xFF);
-    thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
-    thisSerial->write(adjustToLength(length));
-    writeFromDataArray(adjustToLength(length));
+    if (*thisSerial) {
+      thisSerial->write(0xFF);
+      thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
+      thisSerial->write(adjustToLength(length));
+      writeFromDataArray(adjustToLength(length));
+    }
   }
   void onPackage(void (*function)(uint8_t, uint8_t)) {
     packageFunc = function;
@@ -116,22 +122,24 @@ public:
         Procedure that runs in loop()
     */
   void serialListen() {
-    if (thisSerial->available() > 0) {
-      if (thisSerial->read() == 0xFF) {
-        msBuffer = 0;
-        while (msBuffer < 2) {
-          if (thisSerial->available() > 0) {
-            buffer[msBuffer++] = thisSerial->read();
+    if (*thisSerial) {
+      if (thisSerial->available() > 0) {
+        if (thisSerial->read() == 0xFF) {
+          msBuffer = 0;
+          while (msBuffer < 2) {
+            if (thisSerial->available() > 0) {
+              buffer[msBuffer++] = thisSerial->read();
+            }
           }
-        }
-        if (buffer[0] > 0x7F) {
-          if (extraFunc != nullptr) {
+          if (buffer[0] > 0x7F) {
             readToDataArray(buffer[1]);
-            extraFunc(buffer[0] & 0x7F, buffer[1]);
-          }
-        } else {
-          if (packageFunc != nullptr) {
-            packageFunc(buffer[0], buffer[1]);
+            if (extraFunc != nullptr) {
+              extraFunc(buffer[0] & 0x7F, buffer[1]);
+            }
+          } else {
+            if (packageFunc != nullptr) {
+              packageFunc(buffer[0], buffer[1]);
+            }
           }
         }
       }

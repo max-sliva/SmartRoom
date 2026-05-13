@@ -1,86 +1,68 @@
+#include <math.h>
 #include <stdint.h>
 #include <Arduino.h>
 
+#ifndef LedHandler_h
+#define LedHandler_h
+#define MAXNUMBEROFLEDS 8
+
 class LedHandler {
 private:
-  /**
-        uint8_t number of posible connetcion Led Lines
-    */
+  // uint8_t number of posible connetcion Led Lines
   uint8_t numberOfConnections;
-  /**
-        uint8_t array of pins, made dinamicly in constructor. Length array corresponds with numberOfConnections
-    */
-  uint8_t* arrayOfPins;
-  /**
-        uint8_t array of data which used in OUTPUT on pins, needed to request current brightness of leds
-    */
-  uint8_t* arrayOfData;
+  // uint8_t array of pins, made dinamicly in constructor. Length array corresponds with numberOfConnections
+  uint8_t arrayOfPins[MAXNUMBEROFLEDS];
+  // uint8_t array of data which used in OUTPUT on pins, needed to request current brightness of leds
+  uint8_t arrayOfData[MAXNUMBEROFLEDS];
+  // buffers for change led value overtime
+  int16_t* bufferArray;
 public:
-  /**
-        Default constructor
-    */
+  // Default constructor
   LedHandler() {
     numberOfConnections = 0;
-    arrayOfPins = nullptr;
-    arrayOfData = nullptr;
+    bufferArray = nullptr;
   }
-  /**
-        Constructor with fields: numberOfConnections, uint8_t ptr (must match numberOfConnections)
-    */
-  LedHandler(uint8_t newNumberOfPins, uint8_t * newPins) {
-    numberOfConnections = newNumberOfPins;
-    arrayOfPins = newPins;
-    arrayOfData = new uint8_t[numberOfConnections];
-    for (uint16_t i = 0; i < numberOfConnections; i++) {
+  // Constructor with fields
+  LedHandler(uint8_t newNumberOfPins, uint8_t* newPins) {
+    if (newNumberOfPins > MAXNUMBEROFLEDS) {
+      numberOfConnections = MAXNUMBEROFLEDS;
+    } else {
+      numberOfConnections = newNumberOfPins;
+    }
+    for (uint8_t i = 0; i < numberOfConnections; i++) {
+      arrayOfPins[i] = newPins[i];
       pinMode(arrayOfPins[i], OUTPUT);
       setValue(i, 0xFF);
     }
-  }
-  /**
-        Returns representation of this object in type of uint8_t where first element is numberOfConections,
-        length of array = numberOfConnections + 1
-    */
-  uint8_t* toByteArray() {
-    uint8_t* byteArray = new uint8_t[numberOfConnections + 1];
-    byteArray[0] = numberOfConnections;
-    for (uint16_t i = 0; i < numberOfConnections; i++) {
-      byteArray[i + 1] = arrayOfPins[i];
-    }
-    return byteArray;
+    bufferArray = new uint16_t[numberOfConnections * 2];
   }
   uint8_t getNumberOfConnetcion() {
     return numberOfConnections;
   }
-  uint8_t getValue(uint8_t ledId) {
-    return arrayOfData[ledId];
-  }
   /**
-        Function setting pointer of array uint8_t
-    */
-  void setPins(uint8_t * newPins) {
-    if (arrayOfPins != nullptr) {
-      delete[] arrayOfPins;
+    Returns value of arrayOfData[ledId] if ledId between 0 or numberOfConnections 
+  */
+  uint8_t getValue(uint8_t ledId) {
+    if ((ledId < 0) || (ledId >= numberOfConnections)) {
+      return 0;
     }
-    arrayOfPins = newPins;
+    return arrayOfData[ledId];
   }
   /**
         Function setting newValue to Output on pin ledId corresponds in array, return 0 if succesful, 1 otherwise
     */
   uint8_t setValue(uint8_t ledId, uint8_t newValue) {
+    if ((ledId < 0) || (ledId >= numberOfConnections)) {
+      return 1;
+    }
     analogWrite(arrayOfPins[ledId], newValue);
     arrayOfData[ledId] = newValue;
     return 0;
   }
   uint8_t setValue(uint8_t ledId, uint8_t newValue, uint32_t ms) {
-    if (numberOfConnections == 0) {
-      if (Serial) Serial.println("NumberOfConnections = 0");
+    if ((ledId < 0) || (ledId >= numberOfConnections)) {
       return 1;
     }
-    if (ledId >= numberOfConnections) {
-      if (Serial) Serial.println("Index out of range!");
-      return 1;
-    }
-
     int16_t differenceValue = static_cast<int16_t>(newValue) - static_cast<int16_t>(arrayOfData[ledId]);
     int16_t absDifference = abs(differenceValue);
     uint8_t value_dx = absDifference / differenceValue;
@@ -106,40 +88,43 @@ public:
         TO DO figure out mathematics behind ms_dx & value_dx
     */
   uint8_t setValueAll(uint8_t newValue, uint32_t ms) {
-      int16_t* value_diff = new int16_t[numberOfConnections];
-      int8_t* value_dx = new int8_t[numberOfConnections];
-      uint16_t* mod_dx = new uint16_t[numberOfConnections];
-      //uint32_t new_ms = ms / 10;
-      for (uint8_t i = 0; i < numberOfConnections; i++) {
-        value_dx[i] = 1;
-        value_diff[i] = newValue - arrayOfData[i];
-        if (value_diff[i] < 0) {
-          value_dx[i] *= -1;
-        }
-        mod_dx[i] = round(ms / abs(value_diff[i]));
-        Serial.print("value_diff: ");
-        Serial.print(value_diff[i]);
-        Serial.print("\tvalue_dx: ");
-        Serial.print(value_dx[i]);
-        Serial.print("\tmod_dx: ");
-        Serial.println(mod_dx[i]);
+    if (bufferArray == nullptr) {
+      return 1;
+    }
+    if (numberOfConnections == 1) {
+      return setValue(0, newValue, ms);
+    }
+    if (ms == 0) {
+      return setValueAll(newValue);
+    }
+    int16_t buffer, maxLastDelay = 1;
+    for (uint8_t i = 0; i < numberOfConnections; i++) {
+      buffer = newValue - arrayOfData[i];
+      if (buffer < 0) {
+        bufferArray[2 * i] = -1;
+      } else {
+        bufferArray[2 * i] = 1;
       }
-      uint8_t j;
-      for (uint32_t i = 0; i < ms; i++) {
-        for (j = 0; j < numberOfConnections; j++) {
-          if ((i % mod_dx[j]) == 0) {
-            if (((arrayOfData[j] + value_dx[j]) < 255) && ((arrayOfData[j] + value_dx[j]) >= 0)) {
-              arrayOfData[j] += value_dx[j];
-              analogWrite(arrayOfPins[j], arrayOfData[j]);
-            }
+      bufferArray[2 * i + 1] = ms / abs(buffer);
+      if (maxLastDelay < (ms % bufferArray[2 * i + 1])) maxLastDelay = ms % bufferArray[2 * i + 1];
+    }
+    for (uint32_t i = 0; i < ms; i++) {
+      for (buffer = 0; buffer < numberOfConnections; buffer++) {
+        if ((i % bufferArray[2 * buffer + 1]) == 0) {
+          if (((arrayOfData[buffer] + bufferArray[2 * buffer]) >= 255) || ((arrayOfData[buffer] + bufferArray[2 * buffer]) < 0)) {
+            continue;
+          } else {
+            arrayOfData[buffer] += bufferArray[2 * buffer];
+            analogWrite(arrayOfPins[buffer], arrayOfData[buffer]);
           }
         }
-        delay(1);
       }
-      setValueAll(newValue);
-      delete value_diff;
-      delete value_dx;
-      delete mod_dx;
-      return 0;
+      delay(1);
+    }
+    delay(maxLastDelay);
+    setValueAll(newValue);
+    return 0;
   }
 };
+
+#endif

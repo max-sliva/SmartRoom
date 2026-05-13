@@ -61,22 +61,43 @@ void packageHandler(uint8_t comma, uint8_t data) {
   }
 }
 
+void packageExtraHandler(uint8_t comma, uint8_t length) {
+  switch (comma) {
+    case 0:
+      analogWrite(13,255);
+      delay(500);
+      digitalWrite(13,LOW);
+      delay(100);
+      if (mySerial.getDataElem(0) > 0) {
+        analogWrite(13,255);
+        delay(500);
+        digitalWrite(13,LOW);
+        delay(100);
+      }
+      if (mySerial.getDataElem(1) > 0) {
+        analogWrite(13,100);
+        delay(500);
+        digitalWrite(13,LOW);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
-  //mySerial.begin(115200);   // CUSTOMSERIAL TO ARD MINI
 
-  // EMERGENCY
-  pinMode(A5, INPUT);
-
-  // while (!Serial2);         // MUSTHAVE
   mySerial.onPackage(packageHandler);
+  mySerial.onPackage(packageExtraHandler);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
   pinMode(13,OUTPUT);
+  // pinMode(31,OUTPUT);
 
   digitalWrite(53,LOW);
   digitalWrite(52,HIGH);
@@ -101,12 +122,11 @@ void loop() {
   }
   if ((extPower == false)&&(analogRead(A5) > 200)) {
     extPower = true;
-    while (!Serial2);
-    Serial2.begin(115200);
+    mySerial.begin(115200);
   }
   if ((extPower == true)&&(analogRead(A5) < 200)) {
     extPower = false;
-    Serial2.end();
+    mySerial.end();
   }
 }
 
@@ -142,7 +162,7 @@ void trigger1() {
 void trigger2() {
   uint8_t value;
   mySerial.resetDataArray();
-  for (uint8_t i = 0; i < 1; i++) {
+  for (uint8_t i = 0; i < 2; i++) {
     value = myNex.readNumber(names[i+1]);
     if (value != values[i+1]) {
       values[i+1] = value;

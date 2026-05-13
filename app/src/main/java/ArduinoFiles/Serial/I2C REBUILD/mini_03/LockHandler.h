@@ -26,32 +26,16 @@ private:
   boolean stateWritePass = false;  // boolean value that shows password is currently filling or not
   // 32 bit long value to check time out when requesting enter
   uint32_t timeRequest;
-  const uint16_t TIMEOUT = 10000;
-  // ARRAY OF POINTERS OF FUNCTIONS TO EXTEND POSSIBLE ACTIONS OF LOCKLISTEN:
-  // MAIN ACTIONS:        GRANTACCESS (0), REVOKEACCESS (1),
-  // SECONDARY ACTIONS:   REPEATACCESS (2), ACCESSDENIED (3),
-  // CONTROL ACTIONS:     REQUESTACCESS(4), TIMEOUT(5), ABORTREQUEST(6)
-  enum Actions {GRANTACCESS, REVOKEACCESS, REPEATACCESS,
-   ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST};
-  void (*actionsNodes[7])();
+  const uint16_t TIMEOUTMS = 10000;
+  void (*actionNodes[7])();
   // Writes charDigit in password[8] if countChar < lengthOfPassword, return countChar == lengthOfPassword
   boolean writeCharPass(char charDigit);
   // Procedure that resets password to all 0 & sets countChar at 0
   void resetPassword();
-  // Turns D-latch on button to boolean value
+  // Turns values of touchpad button to that boolean value
   void setButtonValue(boolean value);
   // Hash function, returns uint32_t hash value from char* str
   uint32_t hashDJB2(char* str);
-  /** procedure to pass pointer of additional action on type of Actions
-    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
-    ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST
-  */
-  void onAction(void (*function)(), Actions action);
-  /** procedure to call passed pointers of function of action on type of Actions
-    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
-    ACCESSDENIED, REQUESTACCESS, TIMEOUT, ABORTREQUEST
-  */
-  void callAction(Actions action);
   /**
     Procedure that calls when Access granted by LockHandler,
     calls action GRANTACCESS if not nullptr
@@ -60,182 +44,68 @@ private:
   /**
     Procedure that complete some action when need to revoke Access to the room
   */
-  void revokeAccess() {
-    locked = true;
-    digitalWrite(ledPins[0],LOW);
-    digitalWrite(ledPins[1],HIGH);
-    //revokeAccessAction();
-    delay(500);
-  }
+  void revokeAccess();
   /**
     Procedure that complete some action when need to repeat grantAccess() action
   */
-  void repeatAccess() {
-    digitalWrite(ledPins[0],LOW);
-    delay(100);
-    repeatAccessAction();
-    digitalWrite(ledPins[0],HIGH);
-    delay(500);
-  }
-
-  void accessDenied() {
-    resetPassword();
-    digitalWrite(ledPins[1],LOW);
-    delay(100);
-    digitalWrite(ledPins[1],HIGH);
-    accessDeniedAction();
-    delay(500);
-  }
+  void repeatAccess();
+  /**
+    Procedure that complete some action when need to do when access denied to the room
+  */
+  void accessDenied();
 public:
-  uint8_t getLockedState() {
-    return locked;
-  }
+  // ARRAY OF POINTERS OF FUNCTIONS TO EXTEND POSSIBLE ACTIONS OF LOCKLISTEN:
+  // MAIN ACTIONS:        GRANTACCESS (0), REVOKEACCESS (1),
+  // SECONDARY ACTIONS:   REPEATACCESS (2), ACCESSDENIED (3),
+  // CONTROL ACTIONS:     REQUESTACCESS(4), TIMEOUT(5), REQUESTABORT(6)
+  enum Actions {GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+   ACCESSDENIED, REQUESTACCESS, TIMEOUT, REQUESTABORT};
+  /** procedure to pass pointer of additional action on type of Actions
+    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+    ACCESSDENIED, REQUESTACCESS, TIMEOUT, REQUESTABORT
+  */
+  void onAction(void (*function)(), Actions action);
+  /** procedure to call passed pointers of function of action on type of Actions
+    Actions: GRANTACCESS, REVOKEACCESS, REPEATACCESS,
+    ACCESSDENIED, REQUESTACCESS, TIMEOUT, REQUESTABORT
+  */
+  void callAction(Actions action);
+  // Returns boolean stateWritePass
+  boolean getStateWritePass();
+  /**
+    Returns boolean value of locked;
+  */
+  boolean getLockedState();
   /**
         Constructor with fields
     */
   LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
-              char* password, uint8_t length, char _specialSymbol) {
-    this_keypad = keypad;
-    butPinIn = buttonPinIn;
-    butPinOut = buttonPinOut;
-    ledPins[0] = _ledPins[0];
-    ledPins[1] = _ledPins[1];
-    hashPassword = hashDJB2(password);
-    lengthOfPassword = length;
-    specialSymbol = _specialSymbol;
-
-    for (uint8_t i = 0; i < 7; i++) {
-      actionNodes[i] = nullptr;
-    }
-
-    pinMode(butPinIn, OUTPUT);
-    pinMode(butPinOut, INPUT);
-    pinMode(ledPins[0], OUTPUT);
-    pinMode(ledPins[1], OUTPUT);
-
-    setButtonValue(LOW);
-    revokeAccess();
-  }
+              char* password, uint8_t length, char _specialSymbol);
   /**
     Returns true if button is true OR keypad got Key pressed, otherwise false
   */
-  boolean checkInteraction() {
-    return digitalRead(butPinOut) || getBufferChar();
-  }
+  boolean checkInteraction();
   /**
     Returns true if hash of _password by hashDJB2() == hashPassword 
   */
-  boolean checkHashPassword(char* _password) {
-    return hashPassword == hashDJB2(_password);
-  }
+  boolean checkHashPassword(char* _password);
   /**
     Returns true if hash == hashPassword; otherwise false
   */
-  boolean checkHashPassword(uint32_t hash) {
-    return hashPassword == hash;
-  }
+  boolean checkHashPassword(uint32_t hash);
   /**
     Return true if this_keypad returns char != NO_KEY, otherwise returns false.
     This char writes to bufferChar
   */
-  boolean getBufferChar() {
-    bufferChar = this_keypad->getKey();
-    if (bufferChar != NO_KEY) {
-      return true;
-    }
-    return false;
-  }
+  boolean getBufferChar();
   /**
     Procedure that changes password; max length of password is 8
   */
-  void setPassword(char* newPassword, uint8_t length) {
-    char bufferPassword[MAXLENGTHPASSWORD];
-    for (uint8_t i = 0; (i < MAXLENGTHPASSWORD)&&(i < length); i++) {
-      bufferPassword[i] = newPassword[i];
-    }
-    if (length > MAXLENGTHPASSWORD) {
-      lengthOfPassword = MAXLENGTHPASSWORD;
-    }
-    else {
-      lengthOfPassword = length;
-    }
-    hashPassword = hashDJB2(bufferPassword);
-    countChar = 0;
-    stateWritePass = false;
-  }
+  void setPassword(char* newPassword, uint8_t length);
   /**
     Procedure that runs in loop(), 
   */
-  int8_t lockListen() {
-    if (locked) {
-      if (stateWritePass == false) {
-        if (checkInteraction() == true) {
-          setButtonValue(HIGH);
-          if (bufferChar != NO_KEY) {
-            writeCharPass(bufferChar);
-          }
-          stateWritePass = true;
-          Serial.println("Enter");
-          //requestAccessAction();
-          timeRequest = millis();
-          return 1;
-        }
-        return 0;
-      } else {
-        if (digitalRead(butPinOut) == LOW) {
-          stateWritePass = false;
-          resetPassword();
-          requestAbortAction();
-          return -1;
-        } else {
-          if (getBufferChar()) {
-            timeRequest = millis();
-            if (writeCharPass(bufferChar)) {
-              digitalWrite(ledPins[0],HIGH);
-              delay(100);
-              digitalWrite(ledPins[0],LOW);
-              if (checkHashPassword(password)) {
-                grantAccess();
-                return 1;
-              }
-              else {
-                accessDenied();
-                return -1;
-              }
-            }
-          }
-          if (millis() - timeRequest >= TIMEOUT) {
-            stateWritePass = false;
-            resetPassword();
-            setButtonValue(LOW);
-            timeOutAction();
-            return -1;
-          }
-          return 0;
-        }
-      }
-    } else {
-      if (checkInteraction() == true) {
-        if (bufferChar == specialSymbol) {
-          lockCounter++;
-          digitalWrite(ledPins[1],HIGH);
-          delay(100);
-          digitalWrite(ledPins[1],LOW);
-          if (lockCounter >= 3) {
-            revokeAccess();
-            return -1;
-          }
-        }
-        else {
-          lockCounter = 0;
-          repeatAccess();
-          setButtonValue(LOW);
-          return 0;
-        }
-      }
-      return 0;
-    }
-  }
+  int8_t lockListen();
 };
 
 #endif
