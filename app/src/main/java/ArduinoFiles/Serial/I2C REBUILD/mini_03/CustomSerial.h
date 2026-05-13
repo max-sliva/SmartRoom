@@ -39,6 +39,15 @@ private:
       }
     }
   }
+  /**
+    Returns true if readed byte from uart == uint8_t byte, if uart is not available returns false
+  */
+  boolean compareWithNextUartByte(uint8_t byte) {
+    if (thisSerial->available() > 0) {
+      return (thisSerial->read() == byte);
+    }
+    return false;
+  }
 public:
   /**
         Constructor with field
@@ -137,12 +146,20 @@ public:
           }
           if (buffer[0] > 0x7F) {
             readToDataArray(buffer[1]);
-            if (extraFunc != nullptr) {
-              extraFunc(buffer[0] & 0x7F, buffer[1]);
-            }
-          } else {
-            if (packageFunc != nullptr) {
-              packageFunc(buffer[0], buffer[1]);
+          }
+          msBuffer = millis();
+          if ((thisSerial->available() > 0)) {
+            if (thisSerial->read() == 0xFF) {
+              if (buffer[0] > 0x7F) {
+                if (extraFunc != nullptr) {
+                  extraFunc(buffer[0] & 0x7F, buffer[1]);
+                }
+              }
+              else {
+                if (packageFunc != nullptr) {
+                  packageFunc(buffer[0], buffer[1]);
+                } 
+              }
             }
           }
         }
