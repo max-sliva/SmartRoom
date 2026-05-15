@@ -89,6 +89,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
+  mySerial.begin(115200);   // CUSTOMSERIAL
 
   mySerial.onPackage(packageHandler);
   mySerial.onPackage(packageExtraHandler);
@@ -97,7 +98,6 @@ void setup() {
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
   pinMode(13,OUTPUT);
-  // pinMode(31,OUTPUT);
 
   digitalWrite(53,LOW);
   digitalWrite(52,HIGH);
@@ -119,14 +119,6 @@ void loop() {
     myNex.writeNum(names[0],values[0]);
     myNex.writeNum(names[1],fan.getValue());
     updateTextLabelsNextion();
-  }
-  if ((extPower == false)&&(analogRead(A5) > 200)) {
-    extPower = true;
-    mySerial.begin(115200);
-  }
-  if ((extPower == true)&&(analogRead(A5) < 200)) {
-    extPower = false;
-    mySerial.end();
   }
 }
 

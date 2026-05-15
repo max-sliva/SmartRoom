@@ -70,10 +70,10 @@ public:
     ACCESSDENIED, REQUESTACCESS, TIMEOUT, REQUESTABORT
   */
   void callAction(Actions action);
-  // Returns boolean stateWritePass of this obj
+  // Returns boolean stateWritePass
   boolean getStateWritePass();
   /**
-    Returns boolean locked of this obj
+    Returns boolean value of locked;
   */
   boolean getLockedState();
   /**

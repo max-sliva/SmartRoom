@@ -39,21 +39,13 @@ private:
       }
     }
   }
-  /**
-    Returns true if readed byte from uart == uint8_t byte, if uart is not available returns false
-  */
-  boolean compareWithNextUartByte(uint8_t byte) {
-    if (thisSerial->available() > 0) {
-      return (thisSerial->read() == byte);
-    }
-    return false;
-  }
 public:
   /**
         Constructor with field
     */
   CustomSerial(HardwareSerial* serial) {
     thisSerial = serial;
+    pinMode(5,OUTPUT);
   }
   /**
     Begin thisSerial with uint32_t 'baud' rate
@@ -61,6 +53,9 @@ public:
   void begin(uint32_t baud) {
     if (thisSerial!=nullptr) {
       thisSerial->begin(baud);
+      digitalWrite(5,HIGH);
+      delay(100);
+      digitalWrite(5,LOW);
     }
   }
   /**
@@ -69,6 +64,9 @@ public:
   void end() {
     if (thisSerial!=nullptr) {
       thisSerial->end();
+      digitalWrite(5,HIGH);
+      delay(100);
+      digitalWrite(5,LOW);
     }
   }
   // PROCEDURES TO WORK WITH DATAARRAY
@@ -108,10 +106,16 @@ public:
   */
   void sendPackage(int8_t comma, uint8_t data) {
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
-      thisSerial->write(0xFF);  // opening byte
+      digitalWrite(5,HIGH);
+      delay(100);
+      digitalWrite(5,LOW);
+      delay(100);
+      digitalWrite(5,HIGH);
+      delay(100);
+      digitalWrite(5,LOW);
+      thisSerial->write(0xFF);
       thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
       thisSerial->write(data);
-      thisSerial->write(0xFF);  // closing byte
     }
   }
   /**
@@ -120,11 +124,13 @@ public:
   */
   void sendPackageExtra(int8_t comma, uint8_t length) {
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
-      thisSerial->write(0xFF);  // opening byte
+      digitalWrite(5,HIGH);
+      delay(300);
+      digitalWrite(5,LOW);
+      thisSerial->write(0xFF);
       thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
       thisSerial->write(adjustToLength(length));
       writeFromDataArray(adjustToLength(length));
-      thisSerial->write(0xFF);   // closing byte
     }
   }
   void onPackage(void (*function)(uint8_t, uint8_t)) {
@@ -136,35 +142,36 @@ public:
   /**
         Procedure that runs in loop()
     */
-  uint8_t serialListen(void) {
-    if ((thisSerial==nullptr)||(*thisSerial)) {
-      return 1;
-    }
-    if (compareWithNextUartByte(0xFF) == false) {
-      return 1;
-    }
-    msBuffer = 0;
-    while (msBuffer < 2) {
+  void serialListen() {
+    if ((thisSerial!=nullptr)&&(*thisSerial)) {
       if (thisSerial->available() > 0) {
-        buffer[msBuffer++] = thisSerial->read();
+        if (thisSerial->read() == 0xFF) {
+          analogWrite(5,100);
+          delay(100);
+          analogWrite(5,150);
+          delay(100);
+          analogWrite(5,255);
+          delay(100);
+          digitalWrite(5,LOW);
+          msBuffer = 0;
+          while (msBuffer < 2) {
+            if (thisSerial->available() > 0) {
+              buffer[msBuffer++] = thisSerial->read();
+            }
+          }
+          if (buffer[0] > 0x7F) {
+            readToDataArray(buffer[1]);
+            if (extraFunc != nullptr) {
+              extraFunc(buffer[0] & 0x7F, buffer[1]);
+            }
+          } else {
+            if (packageFunc != nullptr) {
+              packageFunc(buffer[0], buffer[1]);
+            }
+          }
+        }
       }
     }
-    if (buffer[0] > 0x7F) {
-      readToDataArray(buffer[1]);
-    }
-    if (compareWithNextUartByte(0xFF) == false) {
-      return 1;
-    }
-    if (buffer[0] > 0x7F) {
-      if (extraFunc != nullptr) {
-        extraFunc(buffer[0] & 0x7F, buffer[1]);
-      }
-    } else {
-      if (packageFunc != nullptr) {
-        packageFunc(buffer[0],buffer[1]);
-      }
-    }
-    return 0;
   }
 };
 

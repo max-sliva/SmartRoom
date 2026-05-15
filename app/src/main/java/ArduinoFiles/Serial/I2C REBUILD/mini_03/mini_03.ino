@@ -64,6 +64,10 @@ void setup() {
   // put your setup code here, to run once
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
+  mySerial.begin(115200);
+  while (!Serial);
+  mySerial.sendPackage(0, 0);
+
   // INIT KEYPAD
   Keypad* myKeypad = new Keypad(makeKeymap(keymap),
                         new uint8_t[3]{ 4, 9, 12 }, new uint8_t[4]{ 7, 3, 2, 8 }, 3, 4);
@@ -82,14 +86,4 @@ void loop() {
   // put your main code here, to run repeatedly:
   mySerial.serialListen();
   myLocker->lockListen();
-  if ((extPower == false)&&(analogRead(A7)>500)) {
-    extPower = true;
-    mySerial.begin(115200);
-    while (!Serial);
-    mySerial.sendPackage(0, 0); // SENDING REQUEST TO GET LED VALUE IF MEGA ACTIVE
-  }
-  if ((extPower == true)&&(analogRead(A7)<500)) {
-    extPower = false;
-    mySerial.end();
-  }
 }

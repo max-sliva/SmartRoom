@@ -34,21 +34,12 @@
     }
     return hash;
   }
-  void LockHandler::onAction(void (*function)(), LockHandler::Actions action) {
-    if (function != nullptr) {
-      actionNodes[action] = function;
-    }
+  void LockHandler::onAction(void (*function)(), Actions action) {
+    actionNodes[action] = function;
   }
-  void LockHandler::callAction(LockHandler::Actions action) {
-    digitalWrite(5,HIGH);
-    delay(100);
-    digitalWrite(5,LOW);
+  void LockHandler::callAction(Actions action) {
     if (actionNodes[action] != nullptr) {
       actionNodes[action]();
-      delay(100);
-      digitalWrite(5,HIGH);
-      delay(100);
-      digitalWrite(5,LOW);
     }
   }
   void LockHandler::grantAccess() {
@@ -58,20 +49,20 @@
     resetPassword();
     digitalWrite(ledPins[1], LOW);
     digitalWrite(ledPins[0], HIGH);
-    callAction(LockHandler::GRANTACCESS);
+    callAction(GRANTACCESS);
     delay(500);
   }
   void LockHandler::revokeAccess() {
     locked = true;
     digitalWrite(ledPins[0],LOW);
     digitalWrite(ledPins[1],HIGH);
-    callAction(LockHandler::REVOKEACCESS);
+    callAction(REVOKEACCESS);
     delay(500);
   }
   void LockHandler::repeatAccess() {
     digitalWrite(ledPins[0],LOW);
     delay(100);
-    callAction(LockHandler::REPEATACCESS);
+    callAction(REPEATACCESS);
     digitalWrite(ledPins[0],HIGH);
     delay(500);
   }
@@ -80,14 +71,14 @@
     digitalWrite(ledPins[1],LOW);
     delay(100);
     digitalWrite(ledPins[1],HIGH);
-    callAction(LockHandler::ACCESSDENIED);
+    callAction(ACCESSDENIED);
     delay(500);
   }
   boolean LockHandler::getStateWritePass() {
-    return LockHandler::stateWritePass;
+    return stateWritePass;
   }
   boolean LockHandler::getLockedState() {
-    return LockHandler::locked;
+    return locked;
   }
   LockHandler::LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
               char* password, uint8_t length, char _specialSymbol) {
@@ -103,7 +94,6 @@
       actionNodes[i] = nullptr;
     }
 
-    pinMode(5,OUTPUT);
     pinMode(butPinIn, OUTPUT);
     pinMode(butPinOut, INPUT);
     pinMode(ledPins[0], OUTPUT);
@@ -152,8 +142,7 @@
             writeCharPass(bufferChar);
           }
           stateWritePass = true;
-          Serial.println("Enter");
-          callAction(LockHandler::REQUESTACCESS);
+          callAction(REQUESTACCESS);
           timeRequest = millis();
           return 1;
         }
@@ -162,7 +151,7 @@
         if (digitalRead(butPinOut) == LOW) {
           stateWritePass = false;
           resetPassword();
-          callAction(LockHandler::REQUESTABORT);
+          callAction(REQUESTABORT);
           return -1;
         } else {
           if (getBufferChar()) {
@@ -185,7 +174,7 @@
             stateWritePass = false;
             resetPassword();
             setButtonValue(LOW);
-            callAction(LockHandler::TIMEOUT);
+            callAction(TIMEOUT);
             return -1;
           }
           return 0;
