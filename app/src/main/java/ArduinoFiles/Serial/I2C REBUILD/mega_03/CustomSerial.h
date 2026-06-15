@@ -45,7 +45,6 @@ public:
     */
   CustomSerial(HardwareSerial* serial) {
     thisSerial = serial;
-    pinMode(5,OUTPUT);
   }
   /**
     Begin thisSerial with uint32_t 'baud' rate
@@ -53,9 +52,6 @@ public:
   void begin(uint32_t baud) {
     if (thisSerial!=nullptr) {
       thisSerial->begin(baud);
-      digitalWrite(5,HIGH);
-      delay(100);
-      digitalWrite(5,LOW);
     }
   }
   /**
@@ -64,9 +60,6 @@ public:
   void end() {
     if (thisSerial!=nullptr) {
       thisSerial->end();
-      digitalWrite(5,HIGH);
-      delay(100);
-      digitalWrite(5,LOW);
     }
   }
   // PROCEDURES TO WORK WITH DATAARRAY
@@ -106,13 +99,6 @@ public:
   */
   void sendPackage(int8_t comma, uint8_t data) {
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
-      digitalWrite(5,HIGH);
-      delay(100);
-      digitalWrite(5,LOW);
-      delay(100);
-      digitalWrite(5,HIGH);
-      delay(100);
-      digitalWrite(5,LOW);
       thisSerial->write(0xFF);
       thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
       thisSerial->write(data);
@@ -146,13 +132,6 @@ public:
     if ((thisSerial!=nullptr)&&(*thisSerial)) {
       if (thisSerial->available() > 0) {
         if (thisSerial->read() == 0xFF) {
-          analogWrite(5,100);
-          delay(100);
-          analogWrite(5,150);
-          delay(100);
-          analogWrite(5,255);
-          delay(100);
-          digitalWrite(5,LOW);
           msBuffer = 0;
           while (msBuffer < 2) {
             if (thisSerial->available() > 0) {
