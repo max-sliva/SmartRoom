@@ -1,24 +1,24 @@
 /**
   MAIN CONTROLLER: ISKRA ARDUINO MEGA 2560
   INCLUDES:
-  NEXTION, CUSTOMSERIAL, FANELEMENT
+  NEXTION, CUSTOMSERIAL, FANELEMENT, STVORKAELEMENT
 */
 
 #include "EasyNextionLibrary.h"
 #include "FanElement.h"
 #include "CustomSerial.h"
-
-#define RX2 16 
+#include "StvorkaElement.h"
 
 EasyNex myNex(Serial3);
 CustomSerial mySerial(&Serial2);
 FanElement fan(12,50);
+StvorkaElement windows[2];
 
 const char* names[10] = {"h0.val","h1.val","h2.val","va0.val",
   "h0.bco","h0.bco1","h1.bco","h1.bco1","h2.bco","h2.bco1"};
+const char* w_names[2] = {"h1.val","h2.val"};
 uint16_t colors[4] = {36415,1055,50712,31727};
 uint8_t values[4] = {0xFF,0xFF,0xFF,0};
-
 boolean extPower = false;
 uint8_t colNum;
 uint32_t time_ms = 0;
@@ -93,6 +93,12 @@ void setup() {
 
   mySerial.onPackage(packageHandler);
   mySerial.onPackage(packageExtraHandler);
+  
+  //INIT WINDOWS STVORKAS
+  windows[0] = StvorkaElement(2,3,A4);
+  windows[0].setBoundaries(730, 145);
+  windows[1] = StvorkaElement(4,5,A5);
+  windows[0].setBoundaries(730, 145);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
@@ -169,4 +175,44 @@ void trigger2() {
 
 void trigger3() {
   fan.setAccuratePWMValue(myNex.readNumber(names[1]));
+}
+
+void trigger4() {
+
+}
+
+void trigger5() {
+  
+}
+
+void trigger6() {
+  
+}
+
+void trigger7() {
+  
+}
+
+void trigger9() {
+  if (windows[0].getCurrentValue() == windows[1].getCurrentValue()) {
+    myNex.writeNum("va0.val", 0);
+  }
+  else {
+    myNex.writeNum("va0.val",1);
+  }
+  myNex.writeNum("h0.val",windows[0].getCurrentValueByte());
+  for (uint8_t i = 0; i < 2; i++) {
+    myNex.writeNum(w_names[i],windows[0].updateValueByte());
+  }
+}
+
+void trigger10() {
+  uint8_t selectedW = myNex.readNumber("va2.val");
+  if (selectedW != 255) {
+    windows[selectedW].moveRelativelyToByte(myNex.readNumber(w_names[selectedW]));
+  } else {
+    for (uint8_t i = 0; i < 2; i++) {
+      windows[i].moveRelativelyToByte(myNex.readNumber("h0.val"));
+    }
+  }
 }
