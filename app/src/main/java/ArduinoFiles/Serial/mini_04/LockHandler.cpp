@@ -68,6 +68,7 @@
   }
   void LockHandler::accessDenied() {
     resetPassword();
+    setButtonValue(LOW);
     digitalWrite(ledPins[1],LOW);
     delay(100);
     digitalWrite(ledPins[1],HIGH);
@@ -117,6 +118,7 @@
     pinMode(ledPins[1], OUTPUT);
 
     setButtonValue(LOW);
+    resetPassword();
     revokeAccess();
   }
   boolean LockHandler::checkInteraction() {

@@ -15,7 +15,6 @@ private:
   uint16_t openedValue;    //0 - 1023;
   uint16_t closedValue;    //0 - 1023;
   uint16_t currentValue;   //0 - 1023;
-  uint8_t locked;          // if stvorka in close position, equals true, otherwise false, only for door
   // Private procedure that sets all power pins
   void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     openPin = _openPin;
@@ -77,11 +76,7 @@ public:
     closedValue = 0;
     POWER = 150;
     TOLERANCE = 16;
-    locked = false;
     updateValue();
-  }
-  boolean getLockedState() {
-    return locked;
   }
   // Set openedValue & closedValue
   void setBoundaries(uint16_t _openedValue, uint16_t _closedValue) {
@@ -111,10 +106,13 @@ public:
   uint16_t getCurrentValue() {
     return currentValue;
   }
+  uint8_t getCurrentValueByte() {
+    return map(currentValue,0,1023,0,255);
+  }
   /**
   *   Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
   */
-  uint8_t getValueInsideBoundaries(uint16_t value) {
+  uint16_t getValueInsideBoundaries(uint16_t value) {
     //value & 0x3FF;     hard cast to 0 - 1023
     return map(value & 0x3FF,0,1023,closedValue,openedValue);
   }
@@ -124,6 +122,22 @@ public:
   uint16_t getShortValue(uint8_t value) {
     return map(value,0,255,closedValue,openedValue);
   }
+  // Returns byte number of value that lays in boundaries
+  uint8_t getByteValue(uint16_t value) {
+    int8_t newValue = map(value,closedValue,openedValue,0,255);
+    Serial.print("openedValue: ");
+    Serial.println(openedValue);
+    Serial.print("closedValue: ");
+    Serial.println(closedValue);
+    Serial.print("value: ");
+    Serial.println(value);
+    Serial.print("newValue: ");
+    Serial.println(newValue);
+    return newValue;
+  }
+  uint8_t updateValueByte() {
+    return map(updateValue(),closedValue,openedValue,0,255);
+  }
   /**
    *  Returns true if value lays between opened & closed Values of stvorkaElement, else false;
    */
@@ -131,17 +145,7 @@ public:
       int16_t length1, length2;
       length1 = abs(static_cast<int16_t>(openedValue - value));
       length2 = abs(static_cast<int16_t>(closedValue - value));
-      int16_t result = (abs(openedValue - closedValue) == (length1 + length2));
-      if (Serial) {
-        Serial.print("Out of Bounds check: {");
-        Serial.print(openedValue);
-        Serial.print(",");
-        Serial.print(value);
-        Serial.print(",");
-        Serial.print(closedValue);
-        Serial.println("}");
-      } 
-      return result;
+      return (abs(openedValue - closedValue) == (length1 + length2));
     }
   /**
   *  Procedure to find Boundaries value, by turning element until it can't in both directions
@@ -185,7 +189,7 @@ public:
       uint16_t buffer = openPin;
       setPins(closePin,openPin,valuePin);
       setBoundaries(closedValue,openedValue);
-      closeStvorka();
+      closeSrvorka();
     }
     Serial.print("openedValue = ");
     Serial.println(openedValue);
@@ -211,22 +215,20 @@ public:
     return transformedValue;
   }
   // Metod that turn stvorka to opened position
-  void openStvorka() {
+  void openSrvorka() {
     //Serial.println("opening...");
     analogWrite(openPin,POWER);
     digitalWrite(closePin,LOW);
-    while ((abs(openedValue-updateValue()) > TOLERANCE) && valueInsideBoundaries(updateValueFine()));
+    while (abs(openedValue-updateValue()) > TOLERANCE);
     digitalWrite(openPin,LOW);
-    locked = false;
   }
   // Metod that turn stvorka to closed position
-  void closeStvorka() {
+  void closeSrvorka() {
     //Serial.println("closing...");
     analogWrite(closePin,POWER);
     digitalWrite(openPin,LOW);
-    while ((abs(closedValue-updateValue()) > TOLERANCE) && valueInsideBoundaries(updateValueFine()));
+    while (abs(closedValue-updateValue()) > TOLERANCE);
     digitalWrite(closePin,LOW);
-    locked = true;
   }
   /*
     Returns representation of this object in type of uint_8t of 8 elem*
@@ -240,5 +242,12 @@ public:
   // void writeBytesToEEPROM(uint32_t eepromAddress) {
   //   MemoryHandler::writeBytesToEEPROM(eepromAddress,8,toArray());
   // }
-
+  boolean performMiddlePossition() {
+    boolean movedState = false;
+    if (!valueInsideBoundaries(updateValue())) {
+      moveDirectTo((openedValue+closedValue)/2);
+      movedState = true;
+    }
+    return movedState;
+  }
 };

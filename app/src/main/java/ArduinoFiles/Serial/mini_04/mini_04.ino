@@ -41,7 +41,6 @@ void packageHandler(uint8_t comma, uint8_t data) {
       if (data == 1) myLocker->grantAccess();
       else {
         myLocker->accessDenied();
-        myLocker->revokeAccess();
       }
       break;
     default:
@@ -59,12 +58,6 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
     case 1:
       myLeds.setValue(mySerial.getDataElem(0), mySerial.getDataElem(1), 1000);
       break;
-    case 2:
-      char buffer[8];
-      for (uint8_t i = 0; i < length;i++) {
-        buffer[i] = mySerial.getDataElem(i);
-      }
-      mySerial.sendPackage(1,myLocker->checkHashPassword(buffer));
     default:
       break;
   }
@@ -97,7 +90,7 @@ void setup() {
   mySerial.onPackageExtra(packageExtraHandler);
   mySerial.begin(115200);
   while (!Serial);
-  mySerial.sendPackage(0, 0);
+  //mySerial.sendPackage(0, 0);
   // Sending door & locker states
   mySerial.setDataElem(1, 0);
   mySerial.setDataElem(1, 1);

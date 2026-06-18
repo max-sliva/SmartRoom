@@ -57,8 +57,24 @@ void packageHandler(uint8_t comma, uint8_t data) {
         mySerial.sendPackageExtra(0,length);
       }
       break;
+    case 9:
+      d_values[0] = data;
+      break;
     case 10:
-
+      d_values[2] = true;
+      if (myNex.currentPageId==4) {
+        myNex.writeStr("vis t0,1");
+        myNex.writeStr("vis b5,1");
+        myNex.writeStr("vis b6,1");
+      }
+      break;
+    case 11:
+      d_values[2] = false;
+      if (myNex.currentPageId==4) {
+        myNex.writeStr("vis t0,0");
+        myNex.writeStr("vis b5,0");
+        myNex.writeStr("vis b6,0");
+      }
     default:
       break;
   }
@@ -67,10 +83,6 @@ void packageHandler(uint8_t comma, uint8_t data) {
 void packageExtraHandler(uint8_t comma, uint8_t length) {
   switch (comma) {
     case 0:
-      analogWrite(13,255);
-      delay(500);
-      digitalWrite(13,LOW);
-      delay(100);
       if (mySerial.getDataElem(0) > 0) {
         analogWrite(13,255);
         delay(500);
@@ -93,6 +105,7 @@ void setup() {
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
   mySerial.begin(115200);   // CUSTOMSERIAL
+  while (!Serial2);
 
   mySerial.onPackage(packageHandler);
   mySerial.onPackage(packageExtraHandler);
@@ -183,36 +196,36 @@ void trigger3() {
 void trigger4() {
   myNex.writeNum("va0.val", d_values[1]);
   if (d_values[2] == HIGH) {
-    mynex.writeStr("vis t0,1");
-    mynex.writeStr("vis b5,1");
-    mynex.writeStr("vis b6,1");
+    myNex.writeStr("vis t0,1");
+    myNex.writeStr("vis b5,1");
+    myNex.writeStr("vis b6,1");
   }
 }
 
 void trigger5() {
-  if (myNex.readNumber("va1.val")!=d_value[0]) {
-    d_value[0] = !d_value[0];
-    mySerial.sendPackage(10, d_value[0]);
+  if (myNex.readNumber("va1.val")!=d_values[0]) {
+    d_values[0] = !d_values[0];
+    mySerial.sendPackage(10, d_values[0]);
   } 
 }
 
 void trigger6() {
-  if (myNex.readNumber("va2.val")!=d_value[1]) {
-    d_value[1] = !d_value[1];
-    mySerial.sendPackage(11, d_value[1]); 
+  if (myNex.readNumber("va2.val")!=d_values[1]) {
+    d_values[1] = !d_values[1];
+    mySerial.sendPackage(11, d_values[1]); 
   }
 }
 
 void trigger7() {
-  if (myNex.readNumber("va2.val")!=d_value[2]) {
-    d_value[2] = !d_value[2];
-    mySerial.sendPackage(12, d_value[2]);
+  if (myNex.readNumber("va2.val")!=d_values[2]) {
+    d_values[2] = !d_values[2];
+    mySerial.sendPackage(12, d_values[2]);
   }
 }
 
 void trigger9() {
   if (windows[0].getCurrentValue() == windows[1].getCurrentValue()) {
-    myNex.writeNum("va0.val", 0);
+    myNex.writeNum("va0.val", 0); 
   }
   else {
     myNex.writeNum("va0.val",1);
