@@ -1,5 +1,5 @@
 #include <EEPROM>
-class MemoryHandler {
+static class MemoryHandler {
 public:
     /**
         Returns a pointer to array of uint8_t, which numberOfBytes values readed from EEPROM on eepromAdress 

@@ -21,10 +21,6 @@ void turnOnPinUntil(uint8_t pin, int value) {
   if (pos == value) {
     return;
   }
-  int dx = 1;
-  if (pos < value) {
-    dx = dx * -1;
-  }
   digitalWrite(pin,HIGH);
   while (pos != value) {
     encoder.tick();
