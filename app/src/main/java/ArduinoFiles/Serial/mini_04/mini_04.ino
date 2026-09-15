@@ -34,14 +34,12 @@ void packageHandler(uint8_t comma, uint8_t data) {
       else myDoor.closeStvorka();
       break;
     case 11:
-      if (data == 1) myLocker->setLockedState(false);
-      else myLocker->setLockedState(true);
+      if (data == 1) myLocker->setLockedState(true);
+      else myLocker->setLockedState(false);
       break;
     case 12:
       if (data == 1) myLocker->grantAccess();
-      else {
-        myLocker->accessDenied();
-      }
+      else myLocker->accessDenied();
       break;
     default:
       break;

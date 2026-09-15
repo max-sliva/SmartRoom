@@ -77,7 +77,7 @@ public:
   */
   boolean getLockedState();
   /**
-    Set boolean value of locked, performs extra actions on visual interface
+    Set boolean value of locked, performs extra actions
   */
   void setLockedState(boolean value);
   /**
