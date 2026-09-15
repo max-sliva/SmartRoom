@@ -17,7 +17,7 @@ void setup() {
   pinMode(DT, INPUT_PULLUP);
   pinMode(SW, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(CLK), handleRotation, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CLK), handleRotation, FALLING);
 }
 
 void loop() {
@@ -36,19 +36,19 @@ void loop() {
 
   // Print only when value changes
   if (encoderTicks != lastTicks) {
-    Serial.print("Ticks: ");
-    Serial.print(encoderTicks);
+    // Serial.print("Ticks: ");
+    Serial.println(encoderTicks);
 
     // Optional: Calculate full turns (assuming 20 steps per rotation)
-    const int STEPS_PER_ROTATION = 20;
-    long fullTurns = encoderTicks / STEPS_PER_ROTATION;
-    int remainder = encoderTicks % STEPS_PER_ROTATION;
+    // const int STEPS_PER_ROTATION = 20;
+    // long fullTurns = encoderTicks / STEPS_PER_ROTATION;
+    // int remainder = encoderTicks % STEPS_PER_ROTATION;
 
-    Serial.print(" | Turns: ");
-    Serial.print(fullTurns);
-    Serial.print(" + ");
-    Serial.print(remainder);
-    Serial.println("/20");
+    // Serial.print(" | Turns: ");
+    // Serial.print(fullTurns);
+    // Serial.print(" + ");
+    // Serial.print(remainder);
+    // Serial.println("/20");
 
     lastTicks = encoderTicks;
   }
@@ -56,9 +56,10 @@ void loop() {
 
 void handleRotation() {
   // Read DT when CLK changes
-  if (digitalRead(CLK) == digitalRead(DT)) {
+  if (digitalRead(DT)) {
     encoderTicks++;
   } else {
     encoderTicks--;
   }
+  //while (digitalRead(CLK) != HIGH);
 }
