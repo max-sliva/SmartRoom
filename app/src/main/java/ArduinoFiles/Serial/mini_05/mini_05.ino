@@ -9,17 +9,15 @@
 #include "CustomSerial.h"0
 #include "StvorkaElement.h"
 
-#define NUMBEROFLEDS 2
-
 char keymap[3][4] = {
   { '1', '4', '7', '*' },
   { '2', '5', '8', '0' },
   { '3', '6', '9', '#' }
 };
-uint8_t ledPins[NUMBEROFLEDS] = { 10, 11 };
+uint8_t ledPins[2] = { 10, 11 };
 boolean extPower = false;
 
-LedHandler myLeds(NUMBEROFLEDS, ledPins);
+LedHandler myLeds(2, ledPins);
 LockHandler* myLocker;
 CustomSerial mySerial(&Serial);
 StvorkaElement myDoor(5,6,A6);

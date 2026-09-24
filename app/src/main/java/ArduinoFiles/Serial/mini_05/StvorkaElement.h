@@ -58,17 +58,6 @@ public:
     POWER = 150;
     TOLERANCE = 16;
   }
-  // Constuctor where data reads from EEPROM
-  // StvorkaElement(uint32_t eepromAddress) {
-  //   uint8_t* args = MemoryHandler::readBytesFromEEPROM(eepromAddress,8);
-  //   setConsts(args[0],args[1]);
-  //   setPins(args[2],args[3],args[4]);
-  //   // putting all 8 bits in openedV from byte 5; putting first 2 bits in openedV from byte 6
-  //   openedValue = static_cast<uint16_t>(args[5]) | (static_cast<uint16_t>(args[6] & 0b11) << 8);
-  //   // putting last 6 bits in closedV from byte 6; putting first 4 bits in closedV from byte 7
-  //   closedValue = static_cast<uint16_t>(args[6] >> 2) | (static_cast<uint16_t>(args[7]) << 6);
-  //   setPinModes();
-  // }
   // Constructor with fields (Used in initial setup)
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     setPins(_openPin, _closePin, _valuePin);
@@ -132,68 +121,17 @@ public:
       length1 = abs((int16_t)openedValue - value);
       length2 = abs((int16_t)closedValue - value);
       int16_t result = (abs((int16_t)openedValue - (int16_t)closedValue) == (length1 + length2));
-      if (Serial) {
-        Serial.print("Out of Bounds check: {");
-        Serial.print(openedValue);
-        Serial.print(",");
-        Serial.print(value);
-        Serial.print(",");
-        Serial.print(closedValue);
-        Serial.println("}");
-      } 
+      // if (Serial) {
+      //   Serial.print("Out of Bounds check: {");
+      //   Serial.print(openedValue);
+      //   Serial.print(",");
+      //   Serial.print(value);
+      //   Serial.print(",");
+      //   Serial.print(closedValue);
+      //   Serial.println("}");
+      // } 
       return result;
     }
-  /**
-  *  Procedure to find Boundaries value, by turning element until it can't in both directions
-  *  and the final user input in the Serial which position is closed
-  */
-  uint8_t findBoundaries(uint16_t interruptionTime) {
-    if (!Serial) {
-      return 1;
-    }
-    Serial.println("Starting finding boundaries...");
-    // turning stvorka to max physically posible value of 'openedValue'
-    analogWrite(openPin,POWER);
-    digitalWrite(closePin,LOW);
-    long start = millis();
-    uint16_t value = updateValue();
-    while (!((millis()-start) >= interruptionTime)) {
-      if (value != updateValueFine()) {
-        start = millis();
-        value = currentValue;
-      }
-    }
-    openedValue = value;
-    // turning stvorka to max physically posible value of 'closedValue'
-    digitalWrite(openPin,LOW);
-    analogWrite(closePin,POWER);
-    start = millis();
-    while (!((millis()-start) >= interruptionTime)) {
-      if (value != updateValueFine()) {
-        start = millis();
-        value = currentValue;
-      }
-    }
-    closedValue = value;
-    digitalWrite(closePin,LOW);
-    // part where opened and closed position specifies
-    Serial.println("This is a closed position? [y/n]");
-    while (!(Serial.available()>0)) {
-      delay(100);
-    }
-    if (Serial.read()!='y') {
-      uint16_t buffer = openPin;
-      setPins(closePin,openPin,valuePin);
-      setBoundaries(closedValue,openedValue);
-      closeStvorka();
-    }
-    Serial.print("openedValue = ");
-    Serial.println(openedValue);
-    Serial.print("closedValue = ");
-    Serial.println(closedValue);
-    Serial.println("Boundaries was adjusted!");
-    return 0;
-  }
   /**
   *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
   */
@@ -232,17 +170,4 @@ public:
       locked = true;
     }
   }
-  /*
-    Returns representation of this object in type of uint_8t of 8 elem*
-  */
-  uint8_t* toArray() {
-    uint32_t buffer = static_cast<uint32_t>(openedValue) | (static_cast<uint32_t>(closedValue) << 10);
-    uint8_t* array = new uint8_t[8] {POWER, TOLERANCE, openPin, closePin, valuePin,
-       static_cast<uint8_t>(buffer), static_cast<uint8_t>(buffer >> 8), static_cast<uint8_t>(buffer >> 16)};
-    return array;
-  }
-  // void writeBytesToEEPROM(uint32_t eepromAddress) {
-  //   MemoryHandler::writeBytesToEEPROM(eepromAddress,8,toArray());
-  // }
-
 };
