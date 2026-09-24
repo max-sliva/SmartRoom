@@ -88,6 +88,7 @@ public:
         TO DO figure out mathematics behind ms_dx & value_dx
     */
   uint8_t setValueAll(uint8_t newValue, uint32_t ms) {
+    
     if (bufferArray == nullptr) {
       return 1;
     }
@@ -97,6 +98,18 @@ public:
     if (ms == 0) {
       return setValueAll(newValue);
     }
+    // CHECKING IF ALL VALUES ARE THE SAME
+    boolean allTheSame = true;
+    for (uint8_t i = 1, value = arrayOfData[0]; i < numberOfConnections; i++) {
+      if (arrayOfData[i] != value) {
+        allTheSame = false;
+        break;
+      }
+    }
+    if (allTheSame) {
+      return setValueAll(newValue, newValue, ms);
+    }
+    //OR ELSE
     int16_t buffer, maxLastDelay = 1;
     for (uint8_t i = 0; i < numberOfConnections; i++) {
       buffer = newValue - arrayOfData[i];
