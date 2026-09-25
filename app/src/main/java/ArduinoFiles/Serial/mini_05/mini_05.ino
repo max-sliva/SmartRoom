@@ -6,7 +6,7 @@
 
 #include "LedHandler.h"
 #include "LockHandler.h"
-#include "CustomSerial.h"0
+#include "CustomSerial.h"
 #include "StvorkaElement.h"
 
 char keymap[3][4] = {
@@ -25,7 +25,11 @@ StvorkaElement myDoor(5,6,A6);
 void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
     case 0:
-      myLeds.setValueAll(data, 1000);
+      if (myLeds.allEqual()) {
+        myLeds.setValueAllSync(data, 1000);
+      } else {
+        myLeds.setValueAllAsync(data, 1000);
+      }
       break;
     case 10:
       if (data == 1) myDoor.openStvorka();

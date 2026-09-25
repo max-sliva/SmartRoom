@@ -1,0 +1,173 @@
+#include <stdint.h>
+#include "Arduino.h"
+
+#ifndef EasyNextionLibrary_h
+#define EasyNextionLibrary_h
+#endif
+class StvorkaElement {
+private:
+  uint8_t POWER;       // VARIABLE THAT USED AS CONSTANT: shows how fast(strong) will be turning motor: analogWrite(anyPin,POWER);
+  uint8_t TOLERANCE;   /* VARIABLE THAT USED AS CONSTANT: shows how much different must be 'some' 
+                     * values related to values getted from potenciometer: analogRead(valuePin); */
+  uint8_t openPin;     // PWM
+  uint8_t closePin;    // PWM
+  uint8_t valuePin;    // Analog
+  uint16_t openedValue;    //0 - 1023;
+  uint16_t closedValue;    //0 - 1023;
+  uint16_t currentValue;   //0 - 1023;
+  uint8_t locked;          // if stvorka in close position, equals true, otherwise false, only for door
+  // Private procedure that sets all power pins
+  void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
+    openPin = _openPin;
+    closePin = _closePin;
+    valuePin = _valuePin;
+  }
+  // Private procedure that sets all pinMode to pins
+  void setPinModes() {
+    pinMode(openPin,OUTPUT);
+    pinMode(closePin,OUTPUT);
+    pinMode(valuePin,INPUT);
+  }
+  /**
+  *   Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
+  */
+  void moveDirectTo(int16_t targetValue) {
+    if (targetValue != updateValue()) {
+      uint8_t highPin, lowPin;
+      if ((targetValue>currentValue)^(closedValue>openedValue)) {
+        highPin = openPin;
+        lowPin = closePin;
+      }
+      else {
+        highPin = closePin;
+        lowPin = openPin;
+      }
+      analogWrite(highPin, POWER);
+      digitalWrite(lowPin, LOW);
+      while (abs(targetValue-updateValue()) > TOLERANCE);
+      digitalWrite(highPin, LOW);
+    }
+  }
+public:
+  // Default constructor: WITHOUT PINMODES!!!
+  StvorkaElement() {
+    setPins(0,0,0);
+    openedValue = 1023;
+    closedValue = 0;
+    currentValue = 0;
+    POWER = 150;
+    TOLERANCE = 16;
+  }
+  // Constructor with fields (Used in initial setup)
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
+    setPins(_openPin, _closePin, _valuePin);
+    setPinModes();
+    openedValue = 1023;
+    closedValue = 0;
+    POWER = 150;
+    TOLERANCE = 16;
+    locked = false;
+    updateValue();
+  }
+  boolean getLockedState() {
+    return locked;
+  }
+  // Set openedValue & closedValue
+  void setBoundaries(uint16_t _openedValue, uint16_t _closedValue) {
+    openedValue = _openedValue;
+    closedValue = _closedValue;
+  }
+  void setConsts(uint8_t _power, uint8_t _tolerance) {
+    POWER = _power;
+    TOLERANCE = _tolerance;
+  }
+  // Returns value from its potenciometer
+  int16_t updateValue() {
+    currentValue = analogRead(valuePin);
+    return currentValue;
+  }
+  // Returns value from its potenciometer when its different by value 'TOLERANCE'
+  int16_t updateValueFine() {
+    uint16_t newValue = analogRead(valuePin);
+    if (abs(newValue - currentValue) > TOLERANCE) {
+        currentValue = newValue; 
+    }
+    return currentValue;
+  }
+  /**
+  *   Returns raw currentValue
+  */
+  uint16_t getCurrentValue() {
+    return currentValue;
+  }
+  /**
+  *   Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
+  */
+  uint8_t getValueInsideBoundaries(uint16_t value) {
+    //value & 0x3FF;     hard cast to 0 - 1023
+    return map(value & 0x3FF,0,1023,closedValue,openedValue);
+  }
+  /**
+  *   Function that returns any value type of uint8_t in the form uint16_t mapped by boundary values
+  */
+  uint16_t getShortValue(uint8_t value) {
+    return map(value,0,255,closedValue,openedValue);
+  }
+  /**
+   *  Returns true if value lays between opened & closed Values of stvorkaElement, else false;
+   */
+  bool valueInsideBoundaries(int16_t value) {
+      int16_t length1, length2;
+      length1 = abs((int16_t)openedValue - value);
+      length2 = abs((int16_t)closedValue - value);
+      int16_t result = (abs((int16_t)openedValue - (int16_t)closedValue) == (length1 + length2));
+      // if (Serial) {
+      //   Serial.print("Out of Bounds check: {");
+      //   Serial.print(openedValue);
+      //   Serial.print(",");
+      //   Serial.print(value);
+      //   Serial.print(",");
+      //   Serial.print(closedValue);
+      //   Serial.println("}");
+      // } 
+      return result;
+    }
+  /**
+  *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
+  */
+  uint16_t moveRelativelyToByte(uint8_t procentValue) {
+    uint16_t transformedValue = getShortValue(procentValue);
+    moveDirectTo(transformedValue);
+    return transformedValue;
+  }
+  /**
+  *   Procedures that turns stvorka to procent of opened position (uint16_t), returns value that actually opened to 
+  */
+  uint16_t moveRelativeToShort(uint16_t procentValue) {
+    uint16_t transformedValue = getValueInsideBoundaries(procentValue);
+    moveDirectTo(transformedValue);
+    return transformedValue;
+  }
+  // Metod that turn stvorka to opened position
+  void openStvorka() {
+  //Serial.println("opening...");
+    if (valueInsideBoundaries(updateValue())) {
+      analogWrite(openPin, POWER);
+      digitalWrite(closePin, LOW);
+      while (abs((int16_t)openedValue - updateValue()) > TOLERANCE);
+      digitalWrite(openPin, LOW);
+      locked = false;
+    }
+  }
+  // Metod that turn stvorka to closed position
+  void closeStvorka() {
+    //Serial.println("closing...");
+    if (valueInsideBoundaries(updateValue())) {
+      analogWrite(closePin, POWER);
+      digitalWrite(openPin, LOW);
+      while (abs((int16_t)closedValue - updateValue()) > TOLERANCE);
+      digitalWrite(closePin, LOW);
+      locked = true;
+    }
+  }
+};

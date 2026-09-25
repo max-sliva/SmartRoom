@@ -49,8 +49,8 @@ public:
     return arrayOfData[ledId];
   }
   /**
-        Function setting newValue to Output on pin ledId corresponds in array, return 0 if succesful, 1 otherwise
-    */
+    Sets newValue to Output on pin ledId corresponds in array, return 0 if succesful, 1 otherwise
+  */
   uint8_t setValue(uint8_t ledId, uint8_t newValue) {
     if ((ledId < 0) || (ledId >= numberOfConnections)) {
       return 1;
@@ -59,6 +59,9 @@ public:
     arrayOfData[ledId] = newValue;
     return 0;
   }
+  /**
+
+  */
   uint8_t setValue(uint8_t ledId, uint8_t newValue, uint32_t ms) {
     if ((ledId < 0) || (ledId >= numberOfConnections)) {
       return 1;
@@ -85,9 +88,40 @@ public:
     return 0;
   }
   /**
-        TO DO figure out mathematics behind ms_dx & value_dx
-    */
-  uint8_t setValueAll(uint8_t newValue, uint32_t ms) {
+    Sets value of ALL leds to 'specific value' (first actually) that changing it over time 'ms'
+    used if all led values are equal
+  */
+  uint8_t setValueAllSync(uint8_t newValue, uint32_t ms) {
+    if (bufferArray == nullptr) {
+      return 1;
+    }
+    if (numberOfConnections == 1) {
+      return setValue(0, newValue, ms);
+    }
+    if (ms == 0) {
+      return setValueAll(newValue);
+    }
+    for (uint8_t index = 1; index < numberOfConnections; index++) {
+      arrayOfData[index] = arrayOfData[0];
+    }
+    int16_t differenceValue = static_cast<int16_t>(newValue) - static_cast<int16_t>(arrayOfData[0]);
+    int16_t absDifference = abs(differenceValue);
+    uint8_t value_dx = absDifference / differenceValue;
+    uint16_t ms_dx = ms / absDifference;
+    for (uint16_t i = 0; i < absDifference; i++) {
+      delay(ms_dx);
+      for (uint8_t index = 0; i < numberOfConnections; i++) {
+        arrayOfData[index] += value_dx;
+        analogWrite(arrayOfPins[index], arrayOfData[index]);
+      }
+    }
+    return 0;
+  }
+  /**
+    Sets value of ALL leds from any 'value' to 'newValue' by changing it over time 'ms'
+    used if all led values are different 
+  */
+  uint8_t setValueAllAsync(uint8_t newValue, uint32_t ms) {
     if (bufferArray == nullptr) {
       return 1;
     }
@@ -124,6 +158,21 @@ public:
     delay(maxLastDelay);
     setValueAll(newValue);
     return 0;
+  }
+
+  boolean allEqual() {
+    if (bufferArray == nullptr) {
+      return true;
+    }
+    if (numberOfConnections <= 1) {
+      return true;
+    }
+    for (uint8_t index = 1; index < numberOfConnections; index++) {
+      if (arrayOfData[0] != arrayOfData[index]) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 

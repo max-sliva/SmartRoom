@@ -27,7 +27,7 @@ StvorkaElement myDoor(5,6,A6);
 void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
     case 0:
-      myLeds.setValueAll(data, 1000);
+     myLeds.setValueAll(data, 1000);
       break;
     case 10:
       if (data == 1) myDoor.openStvorka();
