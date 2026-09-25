@@ -14,11 +14,11 @@ EasyNex myNex(Serial3);
 CustomSerial mySerial(&Serial2);
 FanElement fan(12,50);
 StvorkaElement windows[2];
+Blinds blinds[2];
 
 const char* names[10] = {"h0.val","h1.val","h2.val","va0.val",
   "h0.bco","h0.bco1","h1.bco","h1.bco1","h2.bco","h2.bco1"};
 const char* w_names[3] = {"h1.val","h2.val","h0.val"};
-//uint16_t colors[4] = {36415,1055,50712,31727};
 uint16_t blue_palitra[2] = {36415,1055};
 uint16_t gray_palitra[2] = {50712,31727};
 uint8_t values[4] = {0xFF,0xFF,0xFF,0};
@@ -116,6 +116,10 @@ void setup() {
   windows[1].setBoundaries(590, 200);
   windows[1].setConsts(200, 16);
 
+  //INIT BLINDS
+  blinds[0] = Blinds(31,30);
+  blinds[1] = Blinds(33,32);
+
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
@@ -158,23 +162,6 @@ void trigger0() {
   for (uint8_t i = 0; i < 4; i++) {
     myNex.writeNum(names[i],values[i]);
   }
-  // установка цветовой палитры
-  // РАБОТАЕТ НЕ КОРРЕКТНО
-  // if (values[1] == values[2]) {
-  //   values[0] = values[1];
-  //   values[4] = 0;
-  //   colNum = 0;
-  // }
-  // else {
-  //   values[4] = 1;
-  //   colNum = 2;
-  // }
-  // // colNum переменная нужна для 
-  // for (uint8_t i = 4; i < 10; i++) {
-  //   myNex.writeNum(names[i],colors[colNum]);
-  //   if ((i < 6) || (i % 2 == 1)) colNum++;
-  //   if (colNum > 3) colNum = 0;
-  // }
   if ((values[1] == values[2]) && (values[2] == values[0])) {
     myNex.writeNum("h0.bco", blue_palitra[0]);
     myNex.writeNum("h0.bco1", blue_palitra[1]);
@@ -217,28 +204,7 @@ void trigger1() {
     mySerial.sendPackage(0,values[0]);
   }
 }
-// OLD TRIGGERS
-// void trigger1() {
-//   values[0] = myNex.readNumber(names[0]);
-//   mySerial.sendPackage(0,values[0]);
-// }
-// // distinct light (only 1 at a time)
-// void trigger2() {
-//   uint8_t value;
-//   mySerial.resetDataArray();
-//   for (uint8_t i = 0; i < 2; i++) {
-//     value = myNex.readNumber(names[i+1]);
-//     if (value != values[i+1]) {
-//       values[i+1] = value;
-//       mySerial.setDataElem(i, 0);
-//       mySerial.setDataElem(value, 1);
-//       mySerial.sendPackageExtra(1, 2);
-//       break;
-//     }
-//   }
-//   values[0] = round((values[1]+values[2])/2);
-// }
-// set fun
+
 void trigger3() {
   fan.setAccuratePWMValue(myNex.readNumber(names[1]));
 }
@@ -320,4 +286,27 @@ void trigger10() {
       windows[i].moveRelativelyToByte(myNex.readNumber("h0.val"));
     }
   }
+}
+
+void trigger11() {
+  Serial.println("Blinds update");
+  if (myNex.readNumber(names[0]) == values[0]) {
+    Serial.println("one light change");
+    uint8_t value;
+    mySerial.resetDataArray();
+    for (uint8_t i = 0; i < 2; i++) {
+      value = myNex.readNumber(names[i+1]);
+      if (value != values[i+1]) {
+        values[i+1] = value;
+        mySerial.setDataElem(i, 0);
+        mySerial.setDataElem(value, 1);
+        mySerial.sendPackageExtra(1, 2);
+        break;
+      }
+    }
+  }
+}
+
+void trigger12() {
+  Serial.println("Update Blinds interface");
 }
