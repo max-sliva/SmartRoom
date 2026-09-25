@@ -5,6 +5,9 @@
 #include <EEPROM.h>
 #include "RotaryEncoder.h"
 
+#define DEFAULT_UP 0
+#define DEFAULT_DOWN 40
+
 class Blinds {
 private:
   /*
@@ -32,9 +35,15 @@ private:
   */
   void readPosFromMemory();
 public:
-  Blinds(uint8_t DT_pin, uint8_t CLK_pin, uint8_t up_motor, uint8_t down_motor, int down_pos, int up_pos, int cur_pos, uint16_t bindAddr);
+  Blinds();
+
+  Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, int down_pos, int up_pos, int cur_pos, uint16_t bindAddr);
+
+  Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, int cur_pos, uint16_t bindAddr);
   
   Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t upMotor, uint8_t downMotor, int down_pos, int up_pos, uint16_t bindAddr);
+
+  Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t upMotor, uint8_t downMotor, uint16_t bindAddr);
 
   void moveUpUntil(int value);
 

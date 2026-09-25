@@ -4,20 +4,41 @@
 
 #include "Blinds.h"
 
-Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t upMotor, uint8_t downMotor, int down_pos, int up_pos, int cur_pos,  uint16_t bindAddr) {
+Blinds::Blinds() {
+  down_value = DEFAULT_DOWN;
+  up_value = DEFAULT_UP;
+  bindMemAddress = 1024;
+}
+
+Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, int down_pos, int up_pos, int cur_pos,  uint16_t bindAddr) {
   bindMemAddress = bindAddr;
   EEPROM.put(bindMemAddress,cur_pos);
   DT_pin = dtpin;
   CLK_pin = clkpin;
   encoder = new RotaryEncoder(DT_pin,CLK_pin);
   encoder->setPosition((long)cur_pos);
-  up_motor_pin = upMotor;
-  down_motor_pin = downMotor;
+  up_motor_pin = up_motor;
+  down_motor_pin = down_motor;
   down_value = down_pos;
   up_value = up_value;
 }
 
-Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t upMotor, uint8_t downMotor, int down_pos, int up_pos, uint16_t bindAddr) {
+Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, int cur_pos, uint16_t bindAddr) {
+  bindMemAddress = bindAddr;
+  EEPROM.put(bindMemAddress,cur_pos);
+  DT_pin = dtpin;
+  CLK_pin = clkpin;
+  encoder = new RotaryEncoder(DT_pin,CLK_pin);
+  encoder->setPosition((long)cur_pos);
+  pinMode(up_motor,OUTPUT);
+  up_motor_pin = up_motor;
+  pinMode(down_motor,OUTPUT);
+  down_motor_pin = down_motor;
+  down_value = DEFAULT_DOWN;
+  up_value = DEFAULT_UP;
+}
+
+Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, int down_pos, int up_pos, uint16_t bindAddr) {
   bindMemAddress = bindAddr;
   int position_from_eeprom;
   EEPROM.get(bindMemAddress,position_from_eeprom);
@@ -25,12 +46,28 @@ Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t upMotor, uint8_t downMotor
   CLK_pin = clkpin;
   encoder = new RotaryEncoder(DT_pin,CLK_pin);
   encoder->setPosition((long)position_from_eeprom);
-  up_motor_pin = upMotor;
-  pinMode(upMotor,OUTPUT);
-  down_motor_pin = downMotor;
-  pinMode(downMotor,OUTPUT);
+  up_motor_pin = up_motor;
+  pinMode(up_motor,OUTPUT);
+  down_motor_pin = down_motor;
+  pinMode(down_motor,OUTPUT);
   down_value = down_pos;
   up_value = up_value;
+}
+
+Blinds::Blinds(uint8_t dtpin, uint8_t clkpin, uint8_t up_motor, uint8_t down_motor, uint16_t bindAddr) {
+  bindMemAddress = bindAddr;
+  int position_from_eeprom;
+  EEPROM.get(bindMemAddress,position_from_eeprom);
+  DT_pin = dtpin;
+  CLK_pin = clkpin;
+  encoder = new RotaryEncoder(DT_pin,CLK_pin);
+  encoder->setPosition((long)position_from_eeprom);
+  up_motor_pin = up_motor;
+  pinMode(up_motor,OUTPUT);
+  down_motor_pin = down_motor;
+  pinMode(down_motor,OUTPUT);
+  down_value = DEFAULT_DOWN;
+  up_value = DEFAULT_UP;
 }
 
 void Blinds::moveUpUntil(int value) {
@@ -98,7 +135,7 @@ int Blinds::getUpBound() {
 }
 
 void Blinds::writePosToMemory() {
-  EEPROM.put(bindMemAddress,((int)encoder->getPosition()));
+  EEPROM.update(bindMemAddress,((int)encoder->getPosition()));
 }
 
 void Blinds::readPosFromMemory() {

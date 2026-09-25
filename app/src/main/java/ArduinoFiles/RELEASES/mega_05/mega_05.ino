@@ -2,6 +2,7 @@
   MAIN CONTROLLER: ISKRA ARDUINO MEGA 2560
   INCLUDES:
   NEXTION, CUSTOMSERIAL, FANELEMENT, STVORKAELEMENT, BLINDS
+  EEPROM
 */
 
 #include "EasyNextionLibrary.h"
@@ -9,6 +10,8 @@
 #include "CustomSerial.h"
 #include "StvorkaElement.h"
 #include "Blinds.h"
+
+#include <EEPROM.h>
 
 EasyNex myNex(Serial3);
 CustomSerial mySerial(&Serial2);
@@ -43,6 +46,30 @@ void updateTextLabelsNextion() {
     buffer = "off";
   }
   myNex.writeStr("t1.txt=\"" + buffer + "\"");
+}
+/**
+  Used for writing distinct values into eeprom of main(case 0) or secondary(case1):
+
+  example:
+  "0 127 255" - writes to main controller on 127 address value 255
+  "1 25 20" - writes to secondary controller on 25 address value 20
+*/
+void listenUsbSerial() {
+  if (Serial.available() > 3) {
+    uint8_t data[3];
+    data[0] = Serial.parseInt();
+    data[1] = Serial.parseInt();
+    data[2] = Serial.parseInt();
+    if (data[0] == 0) {
+      EEPROM.update(data[1],data[2]);
+      Serial.println("Wrote on First controller");
+    } else if (data[0] == 1) {
+      mySerial.setDataElem(data[1],0);
+      mySerial.setDataElem(data[2],1);
+      mySerial.sendPackageExtra(127,2);
+      Serial.println("Wrote on Second controller");
+    }
+  }
 }
 
 void packageHandler(uint8_t comma, uint8_t data) {
@@ -117,8 +144,8 @@ void setup() {
   windows[1].setConsts(200, 16);
 
   //INIT BLINDS
-  blinds[0] = Blinds(31,30);
-  blinds[1] = Blinds(33,32);
+  blinds[0] = Blinds(31,30,7,6,128);
+  blinds[1] = Blinds(33,32,9,8,129);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
@@ -134,6 +161,7 @@ void setup() {
 }
 
 void loop() {
+  listenUsbSerial();
   myNex.NextionListen();
   mySerial.serialListen();
   if (digitalRead(A0) == LOW && powerState == true) {

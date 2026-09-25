@@ -113,6 +113,11 @@ public:
   uint16_t getShortValue(uint8_t value) {
     return map(value,0,255,closedValue,openedValue);
   }
+  // Returns byte number of value that lays in boundaries
+  uint8_t getByteValue(uint16_t value) {
+    int8_t newValue = map(value,closedValue,openedValue,0,255);
+    return newValue;
+  }
   /**
    *  Returns true if value lays between opened & closed Values of stvorkaElement, else false;
    */
