@@ -1,52 +1,34 @@
-#include "SingleValueObject.h"
 #include <Arduino.h>
 
-#ifndef FanElement_h
-#define FanElement_h
-
-class FanElement : public SingleValueObject {
+class FanElement {
 private:
-  const int pin;
+  uint8_t pin;
+  uint8_t value;
+  uint8_t minPWMvalue;
 public:
-  FanElement() : SingleValueObject(344,0,255), pin(0) {
+  FanElement() {
+    pin = 0;
+    value = 0;
+    minPWMvalue = 0;
   }
-  FanElement(int _pin, int _minPWMvalue) : SingleValueObject(344,_minPWMvalue,255), pin(_pin) {
-    pinMode(_pin, OUTPUT);
+  FanElement(uint8_t _pin, uint8_t _minPWMvalue) {
+    pin = _pin;
+    value = 0;
+    minPWMvalue = _minPWMvalue;
+    pinMode(pin, OUTPUT);
   }
-
-  void setValue(int v) {
-    this.value = getAccuratePWMValue(v);
-    analogWrite(this.pin,this.value);
+  uint8_t getValue() {
+    return value;
   }
-
-  int getAccuratePWMValue(int v) {
-    if (v == 0) return 0;
-    else return map(v,1,255,MINVALUE,MAXVALUE);
+  uint8_t getMinPWMValue() {
+    return minPWMvalue;
   }
-
-  int getValue() {
-    if (this.value == 0) return 0;
-    else return map(this.value,MINVALUE,MAXVALUE,1,255);
+  uint8_t getAccuratePWMValue(uint8_t rawValue) {
+    if (rawValue < 10) return 0;
+    return map(rawValue, 0, 255, minPWMvalue, 255);
   }
-
-  int getRawValue() {
-    return this.value;
-  }
-
-  void setValueOverTime(int v, long ms) {
-    if ((this.value-v) < 0) dx = -1;
-    else dx = 1;
-    long ms_dx = ms / abs(this.value-v)  
-    for (int i = this.value; i != v; i+=dx) {
-      setValue(i);
-      delay(ms_dx);
-    }
-  }
-    
-  int updateValue() {
-    setValue(this.value);
-    return getValue();
+  void setAccuratePWMValue(uint8_t rawValue) {
+    value = getAccuratePWMValue(rawValue);
+    analogWrite(pin, value);
   }
 };
-
-#endif

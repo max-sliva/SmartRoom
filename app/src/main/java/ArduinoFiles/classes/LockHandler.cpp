@@ -99,7 +99,7 @@
     }
   }
   LockHandler::LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
-              char* password, uint8_t length, char _specialSymbol) : DeviceObject(544) {
+              char* password, uint8_t length, char _specialSymbol) {
     this_keypad = keypad;
     butPinIn = buttonPinIn;
     butPinOut = buttonPinOut;

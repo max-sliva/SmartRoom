@@ -1,14 +1,12 @@
 #include <Arduino.h>
+#include <Keypad.h>
 #include <stdint.h>
-
-#include "DeviceObject.h"
-#include "../libraries/Keypad.h"
 
 #ifndef LockHandler_h
 #define LockHandler_h
 #define MAXLENGTHPASSWORD 8
 
-class LockHandler : public DeviceObject {
+class LockHandler {
 private:
   char bufferChar;     // buffer char for this_keypad->getKey()
   char specialSymbol;  // special symbol on keymap

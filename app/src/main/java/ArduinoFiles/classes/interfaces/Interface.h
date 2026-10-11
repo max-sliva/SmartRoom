@@ -4,11 +4,11 @@
 
 class Interface {
 private:
-    const uint8_t _id;
+    const int _id;
 public:
-    Interface(const uint8_t id) : _id(id) {}
+    Interface(const int id) : _id(id) {}
 
-    uint8_t getId() { return _id };
+    int getId() { return _id };
 
     virtual setData(uint8_t index, uint8_t value) = 0;
 };
