@@ -1,6 +1,7 @@
 #ifndef INTERFACE127_H
 #define INTERFACE127_H
 
+#include "Interface.h"
 #include "../Blinds.h"
 // INTERFACE FOR NEXTION -> MEGA BLINDS
 class Interface127 : public Interface {

@@ -1,6 +1,7 @@
 #ifndef INTERFACE43_H
 #define INTERFACE43_H
 
+#include "Interface.h"
 #include "../CustomSerial.h"
 // INTERFACE FOR NEXTION -> MEGA -> MINI LEDS
 class Interface43 : public Interface {
@@ -11,9 +12,9 @@ private:
     void setValueSingle(uint8_t index, uint8_t value) {
         _array[index] = value;
         if (_serial != nullptr) {
-            _serial.setDataElem(index, 0);
-            _serial.setDataElem(value, 1);
-            _serial.sendPackageExtra(1, 2);
+            _serial->setDataElem(index, 0);
+            _serial->setDataElem(value, 1);
+            _serial->sendPackageExtra(1, 2);
         }
     }
 
@@ -22,7 +23,7 @@ private:
             _array[i] = value;
         }
         if (_serial != nullptr) {
-            _serial.sendPackage(0,value);
+            _serial->sendPackage(0,value);
         }
     }
 public:

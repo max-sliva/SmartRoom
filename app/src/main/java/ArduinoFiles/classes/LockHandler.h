@@ -1,9 +1,10 @@
-#include <Arduino.h>
-#include <Keypad.h>
-#include <stdint.h>
+#ifndef LOCKHANLDER_H
+#define LOCKHANLDER_H
 
-#ifndef LockHandler_h
-#define LockHandler_h
+#include <stdint.h>
+#include <Arduino.h>
+#include "../libraries/Keypad/Keypad.h"
+
 #define MAXLENGTHPASSWORD 8
 
 class LockHandler {

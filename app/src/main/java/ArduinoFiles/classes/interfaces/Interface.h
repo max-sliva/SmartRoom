@@ -1,5 +1,7 @@
-#ifndef Interface
+#ifndef INTERFACE_H
 #define INTERFACE_H
+
+#include <stdint.h>
 
 class Interface {
 private:

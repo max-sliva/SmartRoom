@@ -1,9 +1,9 @@
-#include <stdint.h>
-#include "Arduino.h"
+#ifndef STVORKAELEMENT_H
+#define STVORKAELEMENT_H
 
-#ifndef EasyNextionLibrary_h
-#define EasyNextionLibrary_h
-#endif
+#include <stdint.h>
+#include <Arduino.h>
+
 class StvorkaElement {
 private:
   uint8_t POWER;       // VARIABLE THAT USED AS CONSTANT: shows how fast(strong) will be turning motor: analogWrite(anyPin,POWER);
@@ -176,3 +176,5 @@ public:
     }
   }
 };
+
+#endif

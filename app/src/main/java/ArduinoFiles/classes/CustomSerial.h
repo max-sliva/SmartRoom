@@ -1,8 +1,9 @@
+#ifndef CUSTOMSERIAL_H
+#define CUSTOMSERIAL_H
+
 #include <stdint.h>
 #include <Arduino.h>
 
-#ifndef CustomSerial_h
-#define CustomSerial_h
 #define LENGTHBUFFER 16
 
 class CustomSerial {

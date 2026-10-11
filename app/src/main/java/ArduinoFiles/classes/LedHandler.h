@@ -1,9 +1,10 @@
+#ifndef LEDHANDLER_H
+#define LEDHANDLER_H
+
 #include <math.h>
 #include <stdint.h>
 #include <Arduino.h>
 
-#ifndef LedHandler_h
-#define LedHandler_h
 #define MAXNUMBEROFLEDS 8
 
 class LedHandler {

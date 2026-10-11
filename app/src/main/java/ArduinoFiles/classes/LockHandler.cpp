@@ -1,4 +1,4 @@
-#ifndef LockHandler_h
+#ifndef LOCKHANLDER_H
 #include "LockHandler.h"
 #endif
 

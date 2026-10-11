@@ -1,3 +1,7 @@
+#ifndef FANELEMENT_h
+#define FANELEMENT_h
+
+#include <stdint.h>
 #include <Arduino.h>
 
 class FanElement {
@@ -32,3 +36,5 @@ public:
     analogWrite(pin, value);
   }
 };
+
+#endif

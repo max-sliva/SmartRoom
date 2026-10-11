@@ -1,8 +1,6 @@
-#include "Arduino.h"
-#include <EEPROM.h>
-#include "RotaryEncoder.h"
-
+#ifndef BLINDS_H
 #include "Blinds.h"
+#endif
 
 Blinds::Blinds() {
   down_value = DEFAULT_DOWN;

@@ -1,6 +1,7 @@
 #ifndef INTERFACE344_H
 #define INTERFACE344_H
 
+#include "Interface.h"
 #include "../FanElement.h"
 // INTERFACE FOR NEXTION -> MEGA FANS
 class Interface344 : public Interface {

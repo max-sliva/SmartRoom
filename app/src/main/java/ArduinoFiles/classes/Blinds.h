@@ -1,9 +1,9 @@
-#ifndef Blinds_h
-#define Blinds_h
+#ifndef BLINDS_H
+#define BLINDS_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <EEPROM.h>
-#include "RotaryEncoder.h"
+#include "../libraries/RotaryEncoder/RotaryEncoder.h"
 
 #define DEFAULT_UP 0
 #define DEFAULT_DOWN 40

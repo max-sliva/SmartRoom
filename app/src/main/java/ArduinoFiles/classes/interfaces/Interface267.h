@@ -1,6 +1,7 @@
 #ifndef INTERFACE267_H
 #define INTERFACE267_H
 
+#include "Interface.h"
 #include "../StvorkaElement.h"
 // INTERFACE FOR NEXTION -> MEGA STVORKAS
 class Interface267 : public Interface {
