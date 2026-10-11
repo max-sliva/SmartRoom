@@ -1,16 +1,41 @@
-
 #ifndef Interface
 #define INTERFACE_H
 
 class Interface {
 private:
-    const int _id;
+    const uint16_t _id;
+    bool equalsFlag = true;
+protected:
+    uint8_t _length;
+
+    void setValueSingle(uint8_t index, uint8_t value) = 0;
+
+    void setValueAll(uint8_t value) = 0;
 public:
-    Interface(const int id) : _id(id) {}
+    Interface(const uint16_t id) : _id(id) {}
 
-    int getId() { return _id };
+    uint16_t getId() { return _id };
 
-    virtual setData(uint8_t index, uint8_t value) = 0;
+    virtual uint8_t length() {
+        return _length;
+    }
+
+    bool isEquals() {
+        return equalsFlag;
+    }
+
+    virtual void setValue(uint8_t index, uint8_t value) {
+        if (index == 255) {
+            setValueAll(value);
+            equalsFlag = true;
+        } else {
+            setValueSingle(index, value);
+            equalsFlag = false;
+        }
+    }
+
+    virtual uint8_t getValue(uint8_t index) = 0;
+
 };
 
 #endif INTERFACE_H
