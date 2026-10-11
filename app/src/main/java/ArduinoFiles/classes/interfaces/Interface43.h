@@ -1,7 +1,10 @@
 #ifndef INTERFACE43_H
 #define INTERFACE43_H
 
+#ifndef INTERFACE_H
 #include "Interface.h"
+#endif
+
 #include "../CustomSerial.h"
 // INTERFACE FOR NEXTION -> MEGA -> MINI LEDS
 class Interface43 : public Interface {
