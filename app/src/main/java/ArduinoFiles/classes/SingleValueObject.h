@@ -27,9 +27,7 @@ public:
     virtual int getValue() {
         return this.value;
     }
-
-    virtual int updateValue() {
-        return this.value;
-    }
+    
+    virtual int updateValue() = 0;
 };
 #endif

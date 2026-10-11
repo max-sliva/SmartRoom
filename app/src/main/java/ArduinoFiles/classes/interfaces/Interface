@@ -1,0 +1,16 @@
+
+#ifndef Interface
+#define INTERFACE_H
+
+class Interface {
+private:
+    const uint8_t _id;
+public:
+    Interface(const uint8_t id) : _id(id) {}
+
+    uint8_t getId() { return _id };
+
+    virtual setData(uint8_t index, uint8_t value) = 0;
+};
+
+#endif INTERFACE_H
