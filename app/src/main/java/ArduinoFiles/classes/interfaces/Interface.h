@@ -12,6 +12,8 @@ protected:
 
     void setValueAll(uint8_t value) = 0;
 public:
+    Interface() : _id(0) {}
+
     Interface(const uint16_t id) : _id(id) {}
 
     uint16_t getId() { return _id };

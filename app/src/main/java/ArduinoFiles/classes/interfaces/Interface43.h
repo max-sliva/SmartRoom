@@ -10,7 +10,6 @@ private:
 
     void setValueSingle(uint8_t index, uint8_t value) {
         _array[index] = value;
-        equalsFlag = false;
         if (_serial != nullptr) {
             _serial.setDataElem(index, 0);
             _serial.setDataElem(value, 1);
@@ -22,7 +21,6 @@ private:
         for (uint8_t i = 0; i < _length; i++) {
             _array[i] = value;
         }
-        equalsFlag = true;
         if (_serial != nullptr) {
             _serial.sendPackage(0,value);
         }
