@@ -16,6 +16,15 @@ uint32_t time_ms = 0;
 boolean d_values[3] = {1,0,0};
 boolean powerState = false;
 
+uint8_t findInterface(uint16_t serialNumber) {
+  for (uint8_t i = 0; i < 4;i++) {
+    if (interface[i].getId()==serialNumber) {
+      return i;
+    }
+  }
+  return 0;
+}
+
 void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
     // COMMAND TO SEND LEDS VALUES TO ARD MINI
@@ -103,4 +112,8 @@ void loop() {
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
   }
+}
+
+void trigger1() {
+
 }
