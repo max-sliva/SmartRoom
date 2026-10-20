@@ -87,5 +87,20 @@ void setup() {
 }
 
 void loop() {
+  myNex.NextionListen();
   usbListener.listen();
+  mySerial.serialListen();
+  if (digitalRead(A0) == LOW && powerState == true) {
+    powerState = false;
+    Serial.println("Power turn off");
+    digitalWrite(52,LOW);
+    delay(1000);
+    digitalWrite(53, HIGH);
+  }
+  if (digitalRead(A0) == HIGH && powerState == false) {
+    powerState = true;
+    Serial.println("Power turn on");
+    digitalWrite(53, LOW);
+    digitalWrite(52, HIGH);
+  }
 }

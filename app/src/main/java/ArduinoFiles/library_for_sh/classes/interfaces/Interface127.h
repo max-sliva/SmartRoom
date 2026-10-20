@@ -5,6 +5,7 @@
 #include "Interface.h"
 #endif
 
+#include "../Blinds.h"
 #include "../Blinds.cpp"
 // INTERFACE FOR NEXTION -> MEGA BLINDS
 class Interface127 : public Interface {
