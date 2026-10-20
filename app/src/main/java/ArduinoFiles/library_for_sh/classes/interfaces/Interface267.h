@@ -26,12 +26,12 @@ public:
         _array = new StvorkaElement[length];
     }
 
-    void setElement(uint8_t index, StvorkaElement* element) {
+    void setElement(uint8_t index, const StvorkaElement& element) {
         _array[index] = element;
     }
 
     uint8_t getValue(uint8_t index) {
-        return _array[index].getCurrentValue()
+        return _array[index].getCurrentValue();
     }
 };
 

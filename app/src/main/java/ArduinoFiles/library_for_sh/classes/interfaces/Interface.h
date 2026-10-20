@@ -10,15 +10,17 @@ private:
 protected:
     uint8_t _length;
 
-    void setValueSingle(uint8_t index, uint8_t value) = 0;
+    virtual void setValueSingle(uint8_t index, uint8_t value) = 0;
 
-    void setValueAll(uint8_t value) = 0;
+    virtual void setValueAll(uint8_t value) = 0;
 public:
     Interface() : _id(0) {}
 
     Interface(const uint16_t id) : _id(id) {}
 
-    uint16_t getId() { return _id };
+    uint16_t getId() { 
+        return _id;
+    }
 
     virtual uint8_t length() {
         return _length;

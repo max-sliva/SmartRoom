@@ -12,7 +12,7 @@ private:
     FanElement* _array;
 
     void setValueSingle(uint8_t index, uint8_t value) {
-        _array[i].setAccuratePWMValue(index);
+        _array[index].setAccuratePWMValue(index);
     }
 
     void setValueAll(uint8_t value) {
@@ -26,12 +26,12 @@ public:
         _array = new FanElement[length];
     }
 
-    void setElement(uint8_t index, FanElement* element) {
+    void setElement(uint8_t index,const FanElement& element) {
         _array[index] = element;
     }
 
     uint8_t getValue(uint8_t index) {
-        return _array[index];
+        return _array[index].getAccuratePWMValue();
     }
 };
 

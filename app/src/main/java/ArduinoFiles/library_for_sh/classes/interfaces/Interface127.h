@@ -26,7 +26,7 @@ public:
         _array = new Blinds[length];
     }
 
-    void setElement(uint8_t index, Blinds* element) {
+    void setElement(uint8_t index, const Blinds& element) {
         _array[index] = element;
     }
 

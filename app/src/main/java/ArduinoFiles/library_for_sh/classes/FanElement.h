@@ -27,6 +27,10 @@ public:
   uint8_t getMinPWMValue() {
     return minPWMvalue;
   }
+  uint8_t getAccuratePWMValue() {
+    return getAccuratePWMValue(value);
+  }
+
   uint8_t getAccuratePWMValue(uint8_t rawValue) {
     if (rawValue < 10) return 0;
     return map(rawValue, 0, 255, minPWMvalue, 255);
