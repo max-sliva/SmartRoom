@@ -3,7 +3,8 @@
 #ifdef SMARTHOUSE_DEVICE_MEGA
 #include "classes/CustomSerial.h"
 #include "classes/Interfaces.h"
-#include "libraries/Easy_Nextion_Library/src/EasyNextionLibrary.h"
+#include "libraries/Easy_Nextion_Library/src/EasyNextionLibrary.cpp"
+#include "classes/UsbListener.h"
 #endif
 
 #ifdef SMARTHOUSE_DEVICE_MINI

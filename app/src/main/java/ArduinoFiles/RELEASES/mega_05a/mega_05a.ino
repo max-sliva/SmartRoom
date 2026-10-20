@@ -6,11 +6,10 @@
 */
 #define SMARTHOUSE_DEVICE_MEGA
 #include <library_for_sh.h>
-#include "UsbListener.h"
 
+UsbListener usbListener(&Serial);
 CustomSerial mySerial(&Serial2);
 EasyNex myNex(Serial3);
-UsbListener usbListener(&Serial);
 
 Interface* interfaces[4];
 uint32_t time_ms = 0;
@@ -88,5 +87,5 @@ void setup() {
 }
 
 void loop() {
-
+  usbListener.listen();
 }

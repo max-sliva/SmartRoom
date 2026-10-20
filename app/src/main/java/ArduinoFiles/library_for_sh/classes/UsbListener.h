@@ -1,4 +1,4 @@
-#include "HardwareSerial.h"
+#include <HardwareSerial.h>
 #include <Arduino.h>
 #include <EEPROM.h>
 
@@ -31,7 +31,7 @@ public:
     sendLambda = function;
   }
 
-  void usbListen() {
+  void listen() {
     if (_serial == nullptr) {
       return;
     }
