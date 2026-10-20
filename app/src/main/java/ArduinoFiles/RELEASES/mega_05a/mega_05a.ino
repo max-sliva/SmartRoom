@@ -6,39 +6,16 @@
 */
 #define SMARTHOUSE_DEVICE_MEGA
 #include <library_for_sh.h>
-#include <EEPROM.h>
+#include "UsbListener.h"
 
-EasyNex myNex(Serial3);
 CustomSerial mySerial(&Serial2);
+EasyNex myNex(Serial3);
+UsbListener usbListener(&Serial);
 
-Interface* interfaces;
+Interface* interfaces[4];
 uint32_t time_ms = 0;
 boolean d_values[3] = {1,0,0};
 boolean powerState = false;
-/**
-  Used for writing distinct values into eeprom of main(case 0) or secondary(case1):
-
-  example:
-  "0 127 255" - writes to main controller on 127 address value 255
-  "1 25 20" - writes to secondary controller on 25 address value 20
-*/
-void listenUsbSerial() {
-  if (Serial.available() > 3) {
-    uint8_t data[3];
-    data[0] = Serial.parseInt();
-    data[1] = Serial.parseInt();
-    data[2] = Serial.parseInt();
-    if (data[0] == 0) {
-      EEPROM.update(data[1],data[2]);
-      Serial.println("Wrote on First controller");
-    } else if (data[0] == 1) {
-      mySerial.setDataElem(data[1],0);
-      mySerial.setDataElem(data[2],1);
-      mySerial.sendPackageExtra(127,2);
-      Serial.println("Wrote on Second controller");
-    }
-  }
-}
 
 void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
@@ -47,18 +24,18 @@ void packageHandler(uint8_t comma, uint8_t data) {
       Serial.println("Case 0");
       uint8_t length;
       mySerial.resetDataArray();
-      if (values[3] == 0) {
-        mySerial.sendPackage(0,values[0]);
-      }
-      else {
-        mySerial.setDataElem(values[1],0);
-        mySerial.setDataElem(values[2],1);
-        mySerial.sendPackageExtra(0,length);
-      }
+      // if (values[3] == 0) {
+      //   mySerial.sendPackage(0,values[0]);
+      // }
+      // else {
+      //   mySerial.setDataElem(values[1],0);
+      //   mySerial.setDataElem(values[2],1);
+      //   mySerial.sendPackageExtra(0,length);
+      // }
       break;
     case 9:
       Serial.println("Case 9");
-      d_values[0] = data;
+      //d_values[0] = data;
       break;
     case 10:
       Serial.println("Case 10");
@@ -86,7 +63,7 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
   switch (comma) {
     case 0:
       for (uint8_t i = 0; i < 3;i++) {
-        d_values[i] = mySerial.getDataElem(i);
+        //d_values[i] = mySerial.getDataElem(i);
       }
       break;
     default:
@@ -95,11 +72,19 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
 }
 
 void setup() {
-  interfaces = new Interface[4];
   interfaces[0] = new Interface43(2);
   interfaces[1] = new Interface127(2);
   interfaces[2] = new Interface267(2);
   interfaces[3] = new Interface344(1);
+
+  mySerial.onPackage(packageHandler);
+  mySerial.onPackageExtra(packageExtraHandler);
+
+  Serial.begin(115200);     // Must match Nextion baud rate
+  myNex.begin(115200);      // NEXTION
+  mySerial.begin(115200);   // CUSTOMSERIAL
+  usbListener.begin(115200);//
+  while (!Serial2);
 }
 
 void loop() {
