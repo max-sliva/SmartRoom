@@ -42,6 +42,29 @@ void doActionFromInterfaceData(uint8_t screenNumber) {
       myNex.writeStr("page page_main_menu");
       break;
     case 1:
+      myNex.writeNum("h0.val", interfaces[0]->getValue(0));
+      myNex.writeNum("h1.val", interfaces[3]->getValue(0));
+      myNex.writeStr("t0.txt=\"" + String(map(interfaces[0]->getValue(0),0,255,0,100)) + "\"");
+      myNex.writeStr("t1.txt=\"" + String(map(interfaces[3]->getValue(0),0,255,0,100)) + "\"");
+      break;
+    default:
+      bufferInter = findInterfaceByScreen(screenNumber);
+      if (bufferInter == 65535) {
+        return;
+      }
+      if (interfaces[bufferInter]->isEquals()) {
+        myNex.writeNum("h0.val",interfaces[bufferInter]->getValue(0));
+      } else {
+        myNex.writeNum("va1.val", 0);
+        myNex.writeNum("h1.val",interfaces[bufferInter]->getValue(0));
+        myNex.writeNum("h2.val",interfaces[bufferInter]->getValue(1));
+        myNex.writeStr("h0.bco=36415");
+        myNex.writeStr("h1.bco=50712");
+        myNex.writeStr("h2.bco=50712");
+        myNex.writeStr("h0.bco1=1055");
+        myNex.writeStr("h1.bco1=31727");
+        myNex.writeStr("h2.bco1=31727");
+      }
       break;
   }
 }
@@ -102,6 +125,8 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
 }
 
 void setup() {
+  while (!Serial);
+  Serial.println("Serial.started");
   //Interfaces init
   interfaces[0] = new Interface43(2,2);
   interfaces[1] = new Interface127(2,5);
@@ -123,8 +148,8 @@ void setup() {
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
   mySerial.begin(115200);   // CUSTOMSERIAL
-  while (!Serial2);
 
+  while (!Serial2);
   interfaces[0]->setValue(255,255);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
@@ -157,6 +182,8 @@ void loop() {
     Serial.println("Power turn on");
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
+    delay(1000);
+    myNex.writeStr("page page_main_menu");
   }
   if (pageCurrent != myNex.currentPageId) {
     pageCurrent = myNex.currentPageId;
@@ -171,7 +198,7 @@ void trigger1() {
     return;
   }
   interfaces[bufferInter]->setValue(myNex.readNumber("va1.val"),
-  myNex.readNumber("va2.val"));
+  map(myNex.readNumber("va2.val"),0,100,0,255));
 }
 
 void trigger4() {
