@@ -58,12 +58,23 @@ public:
     POWER = 150;
     TOLERANCE = 16;
   }
-  // Constructor with fields (Used in initial setup)
+  // Constructor with fields: PINS
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     setPins(_openPin, _closePin, _valuePin);
     setPinModes();
     openedValue = 1023;
     closedValue = 0;
+    POWER = 150;
+    TOLERANCE = 16;
+    locked = false;
+    updateValue();
+  }
+  // Consturctor with fields: PINS AND BOUNDARIES
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue) {
+    setPins(_openPin, _closePin, _valuePin);
+    setPinModes();
+    openedValue = _openedValue;
+    closedValue = _closedValue;
     POWER = 150;
     TOLERANCE = 16;
     locked = false;

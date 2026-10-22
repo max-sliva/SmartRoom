@@ -18,7 +18,7 @@ boolean powerState = false;
 
 uint8_t findInterface(uint16_t serialNumber) {
   for (uint8_t i = 0; i < 4;i++) {
-    if (interface[i].getId()==serialNumber) {
+    if (interfaces[i]->getId()==serialNumber) {
       return i;
     }
   }
@@ -84,6 +84,14 @@ void setup() {
   interfaces[1] = new Interface127(2);
   interfaces[2] = new Interface267(2);
   interfaces[3] = new Interface344(1);
+  // StvorkaElement(2,3,A4,640,295)
+  ((Interface127)interfaces[1]).setElement(0,Blinds(31,30,7,6,128));
+  ((Interface127)interfaces[1]).setElement(1,Blinds(33,32,9,8,129));
+  ((Interface267)interfaces[2]).setElement(0,StvorkaElement(2,3,A4,640,295));
+  StvorkaElement bufferS = StvorkaElement(4,5,A5,590,200);
+  bufferS.setConsts(200,16);
+  ((Interface267)interfaces[2]).setElement(1,bufferS);
+  ((Interface344)interfaces[1]).setElement(0,FanElement(12,50));
 
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
@@ -93,6 +101,9 @@ void setup() {
   mySerial.begin(115200);   // CUSTOMSERIAL
   usbListener.begin(115200);//
   while (!Serial2);
+
+  interfaces[0]->setValue(0,255);
+  
 }
 
 void loop() {

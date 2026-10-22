@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef SMARTHOUSE_DEVICE_MEGA
-#include "libraries/DefaultNextion.h"
 #include "classes/CustomSerial.h"
 #include "classes/Interfaces.h"
 #include "classes/UsbListener.h"
+#include "libraries/DefaultNextion.h"
 #endif
 
 #ifdef SMARTHOUSE_DEVICE_MINI
