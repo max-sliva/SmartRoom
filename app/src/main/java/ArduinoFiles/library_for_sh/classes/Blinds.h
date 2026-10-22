@@ -3,8 +3,7 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include "../libraries/RotaryEncoder/RotaryEncoder.h"
-#include "../libraries/RotaryEncoder/RotaryEncoder.cpp"
+#include "../libraries/DefaultRotaryEncoder.h"
 
 #define DEFAULT_UP 0
 #define DEFAULT_DOWN 40

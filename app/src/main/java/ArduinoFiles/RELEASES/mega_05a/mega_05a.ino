@@ -117,3 +117,37 @@ void loop() {
 void trigger1() {
 
 }
+
+void trigger4() {
+  Serial.println("Update door interface");
+  myNex.writeNum("va0.val", d_values[1]);
+  if (d_values[2] == HIGH) {
+    myNex.writeStr("vis t0,1");
+    myNex.writeStr("vis b5,1");
+    myNex.writeStr("vis b6,1");
+  }
+}
+
+void trigger5() {
+  Serial.println("Update door");
+  if (myNex.readNumber("va1.val")!=d_values[0]) {
+    d_values[0] = !d_values[0];
+    mySerial.sendPackage(10, d_values[0]);
+  } 
+}
+
+void trigger6() {
+  Serial.println("Update Locker");
+  if (myNex.readNumber("va2.val")!=d_values[1]) {
+    d_values[1] = !d_values[1];
+    mySerial.sendPackage(11, d_values[1]); 
+  }
+}
+
+void trigger7() {
+  Serial.println("Request answer");
+  if (myNex.readNumber("va2.val")!=d_values[2]) {
+    d_values[2] = !d_values[2];
+    mySerial.sendPackage(12, d_values[2]);
+  }
+}

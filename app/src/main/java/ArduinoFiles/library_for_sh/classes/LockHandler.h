@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <Arduino.h>
-#include "../libraries/Keypad/Keypad.h"
+#include "../libraries/DefaultKeypad.h"
 
 #define MAXLENGTHPASSWORD 8
 
