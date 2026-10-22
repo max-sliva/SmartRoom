@@ -27,6 +27,11 @@ public:
         _array = new Blinds[length];
     }
 
+    Interface127(uint8_t length, uint8_t screen) : Interface(127,screen) {
+        _length = length;
+        _array = new Blinds[length];
+    }
+
     void setElement(uint8_t index, const Blinds& element) {
         _array[index] = element;
     }

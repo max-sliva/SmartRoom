@@ -11,18 +11,39 @@ UsbListener usbListener(&Serial);
 CustomSerial mySerial(&Serial2);
 EasyNex myNex(Serial3);
 
+uint8_t pageCurrent = 255;
+uint8_t bufferInter;
 Interface* interfaces[4];
 uint32_t time_ms = 0;
 boolean d_values[3] = {1,0,0};
 boolean powerState = false;
 
-uint8_t findInterface(uint16_t serialNumber) {
-  for (uint8_t i = 0; i < 4;i++) {
+uint16_t findInterface(uint32_t serialNumber) {
+  for (uint16_t i = 0; i < 4;i++) {
     if (interfaces[i]->getId()==serialNumber) {
       return i;
     }
   }
-  return 0;
+  return -1;
+}
+
+uint16_t findInterfaceByScreen(uint8_t screenNumber) {
+  for (uint8_t i = 0; i < 4;i++) {
+    if (interfaces[i]->getScreen()==screenNumber) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void doActionFromInterfaceData(uint8_t screenNumber) {
+  switch (screenNumber) {
+    case 0:
+      myNex.writeStr("page page_main_menu");
+      break;
+    case 1:
+      break;
+  }
 }
 
 void packageHandler(uint8_t comma, uint8_t data) {
@@ -30,20 +51,21 @@ void packageHandler(uint8_t comma, uint8_t data) {
     // COMMAND TO SEND LEDS VALUES TO ARD MINI
     case 0:
       Serial.println("Case 0");
-      uint8_t length;
       mySerial.resetDataArray();
-      // if (values[3] == 0) {
-      //   mySerial.sendPackage(0,values[0]);
-      // }
-      // else {
-      //   mySerial.setDataElem(values[1],0);
-      //   mySerial.setDataElem(values[2],1);
-      //   mySerial.sendPackageExtra(0,length);
-      // }
+      if (interfaces[0]->isEquals()) {
+        mySerial.sendPackage(0,interfaces[0]->getValue(0));
+      }
+      else {
+        uint8_t length = interfaces[0]->length();
+        for (uint8_t i = 0; i < length;i++) {
+          mySerial.setDataElem(interfaces[0]->getValue(i),i);
+        }
+        mySerial.sendPackageExtra(0,length);
+      }
       break;
     case 9:
       Serial.println("Case 9");
-      //d_values[0] = data;
+      d_values[0] = data;
       break;
     case 10:
       Serial.println("Case 10");
@@ -71,7 +93,7 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
   switch (comma) {
     case 0:
       for (uint8_t i = 0; i < 3;i++) {
-        //d_values[i] = mySerial.getDataElem(i);
+        d_values[i] = mySerial.getDataElem(i);
       }
       break;
     default:
@@ -80,11 +102,13 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
 }
 
 void setup() {
-  interfaces[0] = new Interface43(2);
-  interfaces[1] = new Interface127(2);
-  interfaces[2] = new Interface267(2);
-  interfaces[3] = new Interface344(1);
-  // StvorkaElement(2,3,A4,640,295)
+  //Interfaces init
+  interfaces[0] = new Interface43(2,2);
+  interfaces[1] = new Interface127(2,5);
+  interfaces[2] = new Interface267(2,3);
+  interfaces[3] = new Interface344(1,1);
+  // Inners of interfaces init
+  ((Interface43)interfaces[0]).setSerial(&mySerial);
   ((Interface127)interfaces[1]).setElement(0,Blinds(31,30,7,6,128));
   ((Interface127)interfaces[1]).setElement(1,Blinds(33,32,9,8,129));
   ((Interface267)interfaces[2]).setElement(0,StvorkaElement(2,3,A4,640,295));
@@ -92,18 +116,29 @@ void setup() {
   bufferS.setConsts(200,16);
   ((Interface267)interfaces[2]).setElement(1,bufferS);
   ((Interface344)interfaces[1]).setElement(0,FanElement(12,50));
-
+  // setting performers for receiving packages
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
-
+  // Start Serials
   Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
   mySerial.begin(115200);   // CUSTOMSERIAL
-  usbListener.begin(115200);//
   while (!Serial2);
 
-  interfaces[0]->setValue(0,255);
+  interfaces[0]->setValue(255,255);
+
+  pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
+  pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
+  pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
+  pinMode(13,OUTPUT);
+  powerState = true;
+
+  digitalWrite(53,LOW);
+  digitalWrite(52,HIGH);
+  myNex.writeStr("page page_main_menu");
   
+  time_ms = millis();
+
 }
 
 void loop() {
@@ -123,10 +158,20 @@ void loop() {
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
   }
+  if (pageCurrent != myNex.currentPageId) {
+    pageCurrent = myNex.currentPageId;
+  }
 }
 
 void trigger1() {
-
+  Serial.print("Updated Interface: ");
+  bufferInter = findInterface(myNex.readNumber("va0.val"));
+  Serial.println(bufferInter);
+  if (bufferInter == 65535) {
+    return;
+  }
+  interfaces[bufferInter]->setValue(myNex.readNumber("va1.val"),
+  myNex.readNumber("va2.val"));
 }
 
 void trigger4() {

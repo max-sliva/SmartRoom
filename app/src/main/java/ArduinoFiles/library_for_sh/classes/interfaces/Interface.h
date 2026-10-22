@@ -7,6 +7,7 @@ class Interface {
 private:
     const uint16_t _id;
     bool equalsFlag = true;
+    const uint8_t _screen;
 protected:
     uint8_t _length;
 
@@ -14,12 +15,18 @@ protected:
 
     virtual void setValueAll(uint8_t value) = 0;
 public:
-    Interface() : _id(0) {}
+    Interface() : _id(65535), _screen(255) {}
 
-    Interface(const uint16_t id) : _id(id) {}
+    Interface(const uint16_t id) : _id(id), _screen(255) {}
+
+    Interface(const uint16_t id, const uint8_t screen) : _id(id), _screen(screen) {}
 
     uint16_t getId() { 
         return _id;
+    }
+
+    uint8_t getScreen() {
+        return _screen;
     }
 
     virtual uint8_t length() {

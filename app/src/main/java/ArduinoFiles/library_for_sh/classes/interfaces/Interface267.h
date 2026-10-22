@@ -26,6 +26,11 @@ public:
         _array = new StvorkaElement[length];
     }
 
+    Interface267(uint8_t length, uint8_t screen) : Interface(267,screen) {
+        _length = length;
+        _array = new StvorkaElement[length];
+    }
+
     void setElement(uint8_t index, const StvorkaElement& element) {
         _array[index] = element;
     }

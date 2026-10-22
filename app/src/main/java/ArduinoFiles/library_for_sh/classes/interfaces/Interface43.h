@@ -35,6 +35,11 @@ public:
         _array = new uint8_t[length];
     }
 
+    Interface43(uint8_t length, uint8_t screen) : Interface(43,screen) {
+        _length = length;
+        _array = new uint8_t[length];
+    }
+
     void setSerial(CustomSerial* serial) {
         _serial = serial;
     }

@@ -26,6 +26,11 @@ public:
         _array = new FanElement[length];
     }
 
+    Interface344(uint8_t length, uint8_t screen) : Interface(344,screen) {
+        _length = length;
+        _array = new FanElement[length];
+    }
+
     void setElement(uint8_t index,const FanElement& element) {
         _array[index] = element;
     }
