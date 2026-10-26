@@ -7,8 +7,8 @@
 #define SMARTHOUSE_DEVICE_MEGA
 #include <library_for_sh.h>
 
-UsbListener usbListener(&Serial);
-CustomSerial mySerial(&Serial2);
+UsbListener usbListener(Serial);
+CustomSerial mySerial(Serial2);
 EasyNex myNex(Serial3);
 
 uint8_t pageCurrent = 255;
@@ -125,32 +125,44 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
 }
 
 void setup() {
+
+
+  Serial.begin(115200);     // Must match Nextion baud rate
   while (!Serial);
-  Serial.println("Serial.started");
+  Serial.println(1);
   //Interfaces init
   interfaces[0] = new Interface43(2,2);
+  Serial.println(2);
   interfaces[1] = new Interface127(2,5);
+  Serial.println(3);
   interfaces[2] = new Interface267(2,3);
+  Serial.println(4);
   interfaces[3] = new Interface344(1,1);
+  Serial.println(5);
   // Inners of interfaces init
-  ((Interface43)interfaces[0]).setSerial(&mySerial);
+  ((Interface43)interfaces[0]).setSerial(mySerial);
+  Serial.println(6);
   ((Interface127)interfaces[1]).setElement(0,Blinds(31,30,7,6,128));
   ((Interface127)interfaces[1]).setElement(1,Blinds(33,32,9,8,129));
+  Serial.println(7);
   ((Interface267)interfaces[2]).setElement(0,StvorkaElement(2,3,A4,640,295));
   StvorkaElement bufferS = StvorkaElement(4,5,A5,590,200);
   bufferS.setConsts(200,16);
   ((Interface267)interfaces[2]).setElement(1,bufferS);
+  Serial.println(8);
   ((Interface344)interfaces[3]).setElement(0,FanElement(12,50));
+  Serial.println(9);
   // setting performers for receiving packages
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
   // Start Serials
-  Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
   mySerial.begin(115200);   // CUSTOMSERIAL
 
   while (!Serial2);
+  Serial.println(10);
   interfaces[0]->setValue(255,255);
+  Serial.println(11);
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN

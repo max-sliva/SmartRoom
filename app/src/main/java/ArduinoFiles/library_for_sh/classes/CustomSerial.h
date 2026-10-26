@@ -44,8 +44,8 @@ public:
   /**
         Constructor with field
     */
-  CustomSerial(HardwareSerial* serial) {
-    thisSerial = serial;
+  CustomSerial(HardwareSerial serial) {
+    thisSerial = &serial;
   }
   /**
     Begin thisSerial with uint32_t 'baud' rate
