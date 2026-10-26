@@ -38,6 +38,11 @@ public:
     }
 
     virtual void setValue(uint8_t index, uint8_t value) {
+        Serial.print(_id);
+        Serial.print(" ");
+        Serial.print(index);
+        Serial.print(" ");
+        Serial.println(value);
         if (index == 255) {
             setValueAll(value);
             equalsFlag = true;

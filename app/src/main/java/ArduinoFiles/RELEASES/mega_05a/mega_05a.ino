@@ -140,7 +140,7 @@ void setup() {
   StvorkaElement bufferS = StvorkaElement(4,5,A5,590,200);
   bufferS.setConsts(200,16);
   ((Interface267)interfaces[2]).setElement(1,bufferS);
-  ((Interface344)interfaces[1]).setElement(0,FanElement(12,50));
+  ((Interface344)interfaces[3]).setElement(0,FanElement(12,50));
   // setting performers for receiving packages
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
