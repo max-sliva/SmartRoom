@@ -5,7 +5,7 @@
 class UsbListener {
 private:
 
-  HardwareSerial* _serial;
+  HardwareSerial* _serial = nullptr;
 
   void (*sendLambda)(int,int) = nullptr;
 

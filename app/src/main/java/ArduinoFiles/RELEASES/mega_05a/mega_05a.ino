@@ -172,13 +172,15 @@ void setup() {
 
   digitalWrite(53,LOW);
   digitalWrite(52,HIGH);
+  Serial.println(12);
   myNex.writeStr("page page_main_menu");
-  
+  Serial.println(13);
   time_ms = millis();
 
 }
 
 void loop() {
+  Serial.println(100);
   myNex.NextionListen();
   usbListener.listen();
   mySerial.serialListen();
