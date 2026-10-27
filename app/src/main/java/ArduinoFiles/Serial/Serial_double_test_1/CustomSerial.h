@@ -8,7 +8,7 @@
 class CustomSerial {
 private:
   // this Hardware Serial to work with
-  HardwareSerial* thisSerial;
+  HardwareSerial* _serial;
 
   uint8_t buffer[2];
   uint8_t dataArray[LENGTHBUFFER];  // buffer dataArray
@@ -16,24 +16,24 @@ private:
   void (*receiveFunc)(int8_t, uint8_t) = nullptr;
   void (*requestFunc)(int8_t, uint8_t) = nullptr;
   /**
-    Procedure that sends number of elements of dataArray by length to thisSerial
+    Procedure that sends number of elements of dataArray by length to _serial
   */
   void writeFromDataArray(uint8_t length) {
     for (uint8_t i = 0; i < length; i++) {
-      thisSerial->write(dataArray[i]);
+      _serial->write(dataArray[i]);
     }
   }
   /**
-    Procedure that reads from thisSerial to dataArray by length
+    Procedure that reads from _serial to dataArray by length
   */
   void readToDataArray(uint8_t length) {
-    if (thisSerial->available() > 0) {
+    if (_serial->available() > 0) {
       ms = millis();
       uint8_t i = 0;
       while (i < length) {
-        if (thisSerial->available() > 0) {
+        if (_serial->available() > 0) {
           ms = millis();
-          dataArray[i++] = thisSerial->read();
+          dataArray[i++] = _serial->read();
           Serial.println("2");
         }
         if ((millis() - ms) >= 5) {
@@ -47,10 +47,10 @@ public:
         Constructor with field
     */
   CustomSerial(HardwareSerial* serial) {
-    thisSerial = serial;
+    _serial = serial;
 
-    while (thisSerial->available() > 0) {
-      thisSerial->read();
+    while (_serial->available() > 0) {
+      _serial->read();
       Serial.println("3"); 
     }
   }
@@ -86,23 +86,23 @@ public:
     }
   }
   /**
-    Procedure serializes data to send as Recieve, sends that dataArray to thisSerial
+    Procedure serializes data to send as Recieve, sends that dataArray to _serial
     Max number of functions 128 bc of signed char
   */
   void sendReceive(int8_t comma, uint8_t length) {
-    thisSerial->write(0xFF);
-    thisSerial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
-    thisSerial->write(adjustToLength(length));
+    _serial->write(0xFF);
+    _serial->write(comma & 0x7F);  // 0x7F = 0b0111 1111
+    _serial->write(adjustToLength(length));
     writeFromDataArray(adjustToLength(length));
   }
   /**
-    Procedure serializes data to send as Request, sends that dataArray to thisSerial,
+    Procedure serializes data to send as Request, sends that dataArray to _serial,
     Max number of functions is 128 bc of signed char
   */
   void sendRequest(int8_t comma, uint8_t length) {
-    thisSerial->write(0xFF);
-    thisSerial->write(comma | 0x80);  // 0x80 = 0b1000 0000
-    thisSerial->write(adjustToLength(length));
+    _serial->write(0xFF);
+    _serial->write(comma | 0x80);  // 0x80 = 0b1000 0000
+    _serial->write(adjustToLength(length));
   }
   void onReceive(void (*function)(uint8_t, uint8_t)) {
     receiveFunc = function;
@@ -114,13 +114,13 @@ public:
         Procedure that runs in loop()
     */
   void serialListener() {
-    if (thisSerial->available() > 0) {
+    if (_serial->available() > 0) {
       Serial.println("1");
-      if (thisSerial->read() == 0xFF) {
+      if (_serial->read() == 0xFF) {
         ms = 0;
         while (ms < 2) {
-          if (thisSerial->available() > 0) {
-            buffer[ms++] = thisSerial->read();
+          if (_serial->available() > 0) {
+            buffer[ms++] = _serial->read();
           }
         }
         if (buffer[0] > 0x7F) {

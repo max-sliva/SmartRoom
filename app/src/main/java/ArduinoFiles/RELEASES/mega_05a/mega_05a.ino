@@ -7,8 +7,8 @@
 #define SMARTHOUSE_DEVICE_MEGA
 #include <library_for_sh.h>
 
-static UsbListener usbListener(Serial);
-static CustomSerial mySerial(Serial2);
+static UsbListener usbListener(&Serial);
+static CustomSerial mySerial(&Serial2);
 static EasyNex myNex(Serial3);
 
 static uint8_t pageCurrent = 255;
@@ -125,68 +125,51 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
 }
 
 void setup() {
-
-
-  Serial.begin(115200);     // Must match Nextion baud rate
-  while (!Serial);
-  Serial.println(1);
-  //Interfaces init
+  // init interfaces
   interfaces[0] = new Interface43(2,2);
-  Serial.println(2);
   interfaces[1] = new Interface127(2,5);
-  Serial.println(3);
   interfaces[2] = new Interface267(2,3);
-  Serial.println(4);
   interfaces[3] = new Interface344(1,1);
-  Serial.println(5);
-  // Inners of interfaces init
-  ((Interface43)interfaces[0]).setSerial(mySerial);
-  Serial.println(6);
-  ((Interface127)interfaces[1]).setElement(0,Blinds(31,30,7,6,128));
-  ((Interface127)interfaces[1]).setElement(1,Blinds(33,32,9,8,129));
-  Serial.println(7);
-  ((Interface267)interfaces[2]).setElement(0,StvorkaElement(2,3,A4,640,295));
-  StvorkaElement bufferS = StvorkaElement(4,5,A5,590,200);
-  bufferS.setConsts(200,16);
-  ((Interface267)interfaces[2]).setElement(1,bufferS);
-  Serial.println(8);
-  ((Interface344)interfaces[3]).setElement(0,FanElement(12,50));
-  Serial.println(9);
-  // setting performers for receiving packages
+
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
-  // Start Serials
+
+  Serial.begin(115200);     // Must match Nextion baud rate
   myNex.begin(115200);      // NEXTION
   mySerial.begin(115200);   // CUSTOMSERIAL
-
-  while (!Serial2);
-  Serial.println(10);
-  interfaces[0]->setValue(255,255);
-  Serial.println(11);
+  while (!(Serial && Serial2));
+  Serial.println("Serial was started");  
+  
+  Interface43* i43 = static_cast<Interface43*>(interfaces[0]);
+  i43->setSerial(mySerial);
+  i43->setValue(255,255);
+  Interface127* i127 = static_cast<Interface127*>(interfaces[1]);
+  i127->setElement(0,Blinds(31,30,7,6,128));
+  i127->setElement(1,Blinds(33,32,9,8,129));
+  Interface267* i267 = static_cast<Interface267*>(interfaces[2]);
+  i267->setElement(0,StvorkaElement(2,3,A4,640,295));
+  i267->setElement(1,StvorkaElement(4,5,A5,590,200,200,16));
+  Interface344* i344 = static_cast<Interface344*>(interfaces[3]);
+  i344->setElement(0,FanElement(12,50));
+  Serial.println("Interfaces were filled");
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
-  pinMode(13,OUTPUT);
+  pinMode(13,OUTPUT);   // INDICATOR FOR ARDUINO MEGA BOARD ACTIVATION
   powerState = true;
 
   digitalWrite(53,LOW);
   digitalWrite(52,HIGH);
-  Serial.println(12);
   myNex.writeStr("page page_main_menu");
-  Serial.println(13);
-  time_ms = millis();
 
+  time_ms = millis();
 }
 
 void loop() {
-  Serial.println(100);
   myNex.NextionListen();
-  Serial.println(101);
   usbListener.usbListen();
-  Serial.println(102);
   mySerial.serialListen();
-  Serial.println(103);
   if (digitalRead(A0) == LOW && powerState == true) {
     powerState = false;
     Serial.println("Power turn off");
@@ -210,12 +193,17 @@ void loop() {
 void trigger1() {
   Serial.print("Updated Interface: ");
   bufferInter = findInterface(myNex.readNumber("va0.val"));
-  Serial.println(bufferInter);
+  Serial.print(bufferInter);
   if (bufferInter == 65535) {
     return;
   }
-  interfaces[bufferInter]->setValue(myNex.readNumber("va1.val"),
-  map(myNex.readNumber("va2.val"),0,100,0,255));
+  uint8_t index = myNex.readNumber("va1.val");
+  uint8_t value = map(myNex.readNumber("va2.val"),0,100,0,255);
+  Serial.print(" -> ");
+  Serial.print(index);
+  Serial.print(" ");
+  Serial.println(index);
+  interfaces[bufferInter]->setValue(index,value);
 }
 
 void trigger4() {

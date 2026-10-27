@@ -15,8 +15,6 @@ private:
   uint16_t openedValue;    //0 - 1023;
   uint16_t closedValue;    //0 - 1023;
   uint16_t currentValue;   //0 - 1023;
-  uint8_t locked;          // if stvorka in close position, equals true, otherwise false, only for door
-  // Private procedure that sets all power pins
   void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     openPin = _openPin;
     closePin = _closePin;
@@ -52,36 +50,25 @@ public:
   // Default constructor: WITHOUT PINMODES!!!
   StvorkaElement() {
     setPins(0,0,0);
-    openedValue = 1023;
-    closedValue = 0;
+    setBoundaries(1023,0);
     currentValue = 0;
-    POWER = 150;
-    TOLERANCE = 16;
+    setConsts(150,16);
   }
   // Constructor with fields: PINS
-  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
-    setPins(_openPin, _closePin, _valuePin);
-    setPinModes();
-    openedValue = 1023;
-    closedValue = 0;
-    POWER = 150;
-    TOLERANCE = 16;
-    locked = false;
-    updateValue();
-  }
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin)
+   : StvorkaElement(_openPin, _closePin, _valuePin, 1023, 0, 150, 16) {
+   }
   // Consturctor with fields: PINS AND BOUNDARIES
-  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue) {
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue)
+   : StvorkaElement(_openPin, _closePin, _valuePin, _openedValue, _closedValue, 150, 16) {
+   }
+
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue, uint8_t _power, uint8_t _tolerance) {
     setPins(_openPin, _closePin, _valuePin);
     setPinModes();
-    openedValue = _openedValue;
-    closedValue = _closedValue;
-    POWER = 150;
-    TOLERANCE = 16;
-    locked = false;
+    setBoundaries(_openedValue,_closedValue);
+    setConsts(_power,_tolerance);
     updateValue();
-  }
-  boolean getLockedState() {
-    return locked;
   }
   // Set openedValue & closedValue
   void setBoundaries(uint16_t _openedValue, uint16_t _closedValue) {
@@ -137,15 +124,6 @@ public:
       length1 = abs((int16_t)openedValue - value);
       length2 = abs((int16_t)closedValue - value);
       int16_t result = (abs((int16_t)openedValue - (int16_t)closedValue) == (length1 + length2));
-      // if (Serial) {
-      //   Serial.print("Out of Bounds check: {");
-      //   Serial.print(openedValue);
-      //   Serial.print(",");
-      //   Serial.print(value);
-      //   Serial.print(",");
-      //   Serial.print(closedValue);
-      //   Serial.println("}");
-      // } 
       return result;
     }
   /**
@@ -166,24 +144,20 @@ public:
   }
   // Metod that turn stvorka to opened position
   void openStvorka() {
-  //Serial.println("opening...");
     if (valueInsideBoundaries(updateValue())) {
       analogWrite(openPin, POWER);
       digitalWrite(closePin, LOW);
       while (abs((int16_t)openedValue - updateValue()) > TOLERANCE);
       digitalWrite(openPin, LOW);
-      locked = false;
     }
   }
   // Metod that turn stvorka to closed position
   void closeStvorka() {
-    //Serial.println("closing...");
     if (valueInsideBoundaries(updateValue())) {
       analogWrite(closePin, POWER);
       digitalWrite(openPin, LOW);
       while (abs((int16_t)closedValue - updateValue()) > TOLERANCE);
       digitalWrite(closePin, LOW);
-      locked = true;
     }
   }
 };

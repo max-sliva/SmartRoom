@@ -11,8 +11,8 @@ private:
 
 public:
 
-  UsbListener(HardwareSerial serial) {
-    _serial = &serial; 
+  UsbListener(HardwareSerial* serial) {
+    _serial = serial; 
   }
 
   void begin(uint32_t baud) {

@@ -4,7 +4,7 @@
 class CustomSerial {
 private:
   // this Hardware Serial to work with
-  HardwareSerial* thisSerial;
+  HardwareSerial* _serial;
   // state that tells that object stopping listening for sending data and beginnning recieve data
   boolean recieving;
   uint32_t time_ms;
@@ -14,14 +14,14 @@ private:
   const uint8_t LENGTHBUFFERARRAY = 32;
   uint8_t arrayData[LENGTHBUFFERARRAY];
   /**
-    Procedure that sends data array of length to uart thisSerial
+    Procedure that sends data array of length to uart _serial
   */
   void sendData(uint8_t length) {
     if (length > LENGTHBUFFERARRAY) {
       length = LENGTHBUFFERARRAY;
     }
     for (uint8_t i = 0; i < length; i++) {
-      thisSerial->write(dataArray[i]);
+      _serial->write(dataArray[i]);
     }
     resetArrayData();
   }
@@ -36,8 +36,8 @@ private:
     uint8_t counter = 0;
     time_ms = millis();
     while (counter < length) {
-      if (thisSerial.isAvailable() > 0) {
-        dataArray[counter++] = thisSerial.read();
+      if (_serial.isAvailable() > 0) {
+        dataArray[counter++] = _serial.read();
         time_ms = millis();
         continue;
       }
@@ -53,7 +53,7 @@ public:
         Constructor with field
     */
   CustomSerial(HardwareSerial* serial) {
-    thisSerial = serial;
+    _serial = serial;
     recieving = false;
   }
   void resetArrayData() {
@@ -62,7 +62,7 @@ public:
     }
   }
   /**
-    Procedure serializes data to send as Recieve, sends that dataArray to thisSerial
+    Procedure serializes data to send as Recieve, sends that dataArray to _serial
   */
   void sendReceive (uint8_t comma, uint8_t data, uint8_t length) {
     dataArray[0] = 0x00;
@@ -74,14 +74,14 @@ public:
     sendData(dataArray, length + 3);
   }
   /**
-    Procedure serializes data to send as Request, sends that dataArray to thisSerial
+    Procedure serializes data to send as Request, sends that dataArray to _serial
   */
   void sendRequest(uint8_t type, uint8_t length) {
     uint8_t dataArray[3] = { 0x01, type, length };
     sendData(dataArray, 3);
   }
   /**
-    Procedure serializes data that sends on Request, sends that dataArray to thisSerial
+    Procedure serializes data that sends on Request, sends that dataArray to _serial
   */
   void sendDataOnRequest(uint8_t* data, uint8_t length) {
     uint8_t dataArray[length + 2];
@@ -96,7 +96,7 @@ public:
         Procedure that runs in loop()
     */
   void serialListener() {
-    if (thisSerial.isAvailable() > 0) {
+    if (_serial.isAvailable() > 0) {
       dataType = Serial.read();
     }
     if (dataType == 0x02) {
