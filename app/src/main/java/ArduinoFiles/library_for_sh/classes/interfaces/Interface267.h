@@ -31,6 +31,10 @@ public:
         _array = new StvorkaElement[length];
     }
 
+    ~Interface267() {
+        delete[] _array;
+    }
+
     void setElement(uint8_t index, const StvorkaElement& element) {
         _array[index] = element;
     }

@@ -31,6 +31,10 @@ public:
         _array = new FanElement[length];
     }
 
+    ~Interface344() {
+        delete[] _array;
+    }
+
     void setElement(uint8_t index,const FanElement& element) {
         _array[index] = element;
     }

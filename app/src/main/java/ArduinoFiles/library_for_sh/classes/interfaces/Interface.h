@@ -20,6 +20,9 @@ public:
     Interface(const uint16_t id) : _id(id), _screen(255) {}
 
     Interface(const uint16_t id, const uint8_t screen) : _id(id), _screen(screen) {}
+    
+    // виртуальный деструктор 
+    virtual ~Interface() {}
 
     uint16_t getId() { 
         return _id;

@@ -40,6 +40,11 @@ public:
         _array = new uint8_t[length];
     }
 
+    ~Interface43() {
+        delete[] _array;
+        _serial = nullptr;
+    }
+
     void setSerial(CustomSerial* serial) {
         _serial = serial;
     }

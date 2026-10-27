@@ -169,7 +169,7 @@ void setup() {
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
   pinMode(13,OUTPUT);   // INDICATOR FOR ARDUINO MEGA BOARD ACTIVATION
-  powerState = true;
+  powerState = false;
 
   time_ms = millis();
 }
@@ -190,7 +190,6 @@ void loop() {
     Serial.println("Power turn on");
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
-    delay(1000);
     myNex.writeStr("page page_main_menu");
   }
   if (pageCurrent != myNex.currentPageId) {
@@ -210,7 +209,7 @@ void trigger1() {
   Serial.print(" -> ");
   Serial.print(index);
   Serial.print(" ");
-  Serial.println(index);
+  Serial.println(value);
   interfaces[bufferInter]->setValue(index,value);
 }
 

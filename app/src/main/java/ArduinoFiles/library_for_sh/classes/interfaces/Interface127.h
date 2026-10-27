@@ -32,6 +32,10 @@ public:
         _array = new Blinds[length];
     }
 
+    ~Interface127() {
+        delete[] _array;
+    }
+
     void setElement(uint8_t index, const Blinds& element) {
         _array[index] = element;
     }
