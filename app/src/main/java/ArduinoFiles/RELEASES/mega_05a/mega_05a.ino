@@ -7,16 +7,16 @@
 #define SMARTHOUSE_DEVICE_MEGA
 #include <library_for_sh.h>
 
-UsbListener usbListener(Serial);
-CustomSerial mySerial(Serial2);
-EasyNex myNex(Serial3);
+static UsbListener usbListener(Serial);
+static CustomSerial mySerial(Serial2);
+static EasyNex myNex(Serial3);
 
-uint8_t pageCurrent = 255;
-uint8_t bufferInter;
-Interface* interfaces[4];
-uint32_t time_ms = 0;
-boolean d_values[3] = {1,0,0};
-boolean powerState = false;
+static uint8_t pageCurrent = 255;
+static uint8_t bufferInter;
+static Interface* interfaces[4];
+static uint32_t time_ms = 0;
+static boolean d_values[3] = {1,0,0};
+static boolean powerState = false;
 
 uint16_t findInterface(uint32_t serialNumber) {
   for (uint16_t i = 0; i < 4;i++) {
@@ -182,8 +182,11 @@ void setup() {
 void loop() {
   Serial.println(100);
   myNex.NextionListen();
-  usbListener.listen();
+  Serial.println(101);
+  usbListener.usbListen();
+  Serial.println(102);
   mySerial.serialListen();
+  Serial.println(103);
   if (digitalRead(A0) == LOW && powerState == true) {
     powerState = false;
     Serial.println("Power turn off");

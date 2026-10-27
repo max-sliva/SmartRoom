@@ -31,20 +31,19 @@ public:
     sendLambda = function;
   }
 
-  void listen() {
-    if (_serial == nullptr) {
-      return;
-    }
-    if (_serial->available() > 3) {
-      uint8_t data[3];
-      data[0] = _serial->parseInt();
-      data[1] = _serial->parseInt();
-      data[2] = _serial->parseInt();
-      if (data[0] == 0) {
-        EEPROM.update(data[1],data[2]);
-      } else if (data[0] == 1) {
-        if (sendLambda != nullptr) {
-          sendLambda(data[1],data[2]);
+  void usbListen() {
+    if (_serial != nullptr) {
+      if (_serial->available() > 3) {
+        uint8_t data[3];
+        data[0] = _serial->parseInt();
+        data[1] = _serial->parseInt();
+        data[2] = _serial->parseInt();
+        if (data[0] == 0) {
+          EEPROM.update(data[1],data[2]);
+        } else if (data[0] == 1) {
+          if (sendLambda != nullptr) {
+            sendLambda(data[1],data[2]);
+          }
         }
       }
     }
