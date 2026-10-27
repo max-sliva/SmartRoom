@@ -190,10 +190,13 @@ void loop() {
     Serial.println("Power turn on");
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
+    delay(100);
     myNex.writeStr("page page_main_menu");
   }
   if (pageCurrent != myNex.currentPageId) {
     pageCurrent = myNex.currentPageId;
+    Serial.print("---> On page: ");
+    Serial.println(pageCurrent);
   }
 }
 
