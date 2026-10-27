@@ -134,10 +134,10 @@ void setup() {
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
 
-  Serial.begin(115200);     // Must match Nextion baud rate
-  myNex.begin(115200);      // NEXTION
-  mySerial.begin(115200);   // CUSTOMSERIAL
-  while (!(Serial && Serial2));
+  Serial.begin(115200);     // Usb Serial - Must match Nextion baud rate
+  Serial2.begin(115200);   // Serial for connection to Arduino Mini by UART
+  Serial3.begin(115200);      // Serial for NEXTION
+  while (!(Serial && Serial2 && Serial3));
   Serial.println("Serial was started");  
   
   Interface43* i43 = static_cast<Interface43*>(interfaces[0]);
@@ -158,10 +158,6 @@ void setup() {
   pinMode(53,OUTPUT);   // RELAY POWER RESET PIN
   pinMode(13,OUTPUT);   // INDICATOR FOR ARDUINO MEGA BOARD ACTIVATION
   powerState = true;
-
-  digitalWrite(53,LOW);
-  digitalWrite(52,HIGH);
-  myNex.writeStr("page page_main_menu");
 
   time_ms = millis();
 }
