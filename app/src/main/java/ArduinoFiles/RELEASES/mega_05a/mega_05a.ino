@@ -123,7 +123,19 @@ void packageExtraHandler(uint8_t comma, uint8_t length) {
       break;
   }
 }
-
+/*
+  SETUP FOR ARDUINO MEGA:
+  ====================================================================
+  1. Init Interfaces in interfaces array
+  2. Add package performers for CustomSerial
+  3. Start Serial that are used by myNex, mySerial, usbSerial - and wait until they all launched
+  4. Add all elements for every Interface in interfaces:
+  4.1. Get downcasted pointers of Interface
+  4.2. Add Element for every downcasted pointer
+  5. Set pinModes for pins that execute the duty for this Arduino Mega
+  6. Set time for time_ms
+  ====================================================================
+*/
 void setup() {
   // init interfaces
   interfaces[0] = new Interface43(2,2);
@@ -135,13 +147,13 @@ void setup() {
   mySerial.onPackageExtra(packageExtraHandler);
 
   Serial.begin(115200);     // Usb Serial - Must match Nextion baud rate
-  Serial2.begin(115200);   // Serial for connection to Arduino Mini by UART
-  Serial3.begin(115200);      // Serial for NEXTION
+  Serial2.begin(115200);    // Serial for connection to Arduino Mini by UART
+  Serial3.begin(115200);    // Serial for NEXTION
   while (!(Serial && Serial2 && Serial3));
   Serial.println("Serial was started");  
   
   Interface43* i43 = static_cast<Interface43*>(interfaces[0]);
-  i43->setSerial(mySerial);
+  i43->setSerial(&mySerial);
   i43->setValue(255,255);
   Interface127* i127 = static_cast<Interface127*>(interfaces[1]);
   i127->setElement(0,Blinds(31,30,7,6,128));

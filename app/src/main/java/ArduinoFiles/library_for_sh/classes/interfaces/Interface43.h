@@ -40,8 +40,8 @@ public:
         _array = new uint8_t[length];
     }
 
-    void setSerial(CustomSerial serial) {
-        _serial = &serial;
+    void setSerial(CustomSerial* serial) {
+        _serial = serial;
     }
 
     uint8_t getValue(uint8_t index) {
