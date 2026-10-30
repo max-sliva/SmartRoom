@@ -9,6 +9,9 @@
 #include "CustomSerial.h"
 #include "StvorkaElement.h"
 
+#include <LiquidCrystal_I2C.h> 
+LiquidCrystal_I2C lcd(0x27,16,2);
+
 char keymap[3][4] = {
   { '1', '4', '7', '*' },
   { '2', '5', '8', '0' },
@@ -22,7 +25,21 @@ LockHandler* myLocker;
 CustomSerial mySerial(&Serial);
 StvorkaElement myDoor(5,6,A6);
 
+void lcd_print(uint8_t num1, uint8_t num2, uint8_t num3) {
+  lcd.setCursor(0, 0);
+  lcd.print(F("                "));
+  lcd.setCursor(0, 0);
+  lcd.print(num1);
+  lcd.print(":");
+  lcd.print(num2);
+  lcd.print(":");
+  lcd.print(num3);
+  lcd.print(".");
+}
+
+
 void packageHandler(uint8_t comma, uint8_t data) {
+  lcd_print(0,comma,data);
   switch (comma) {
     case 0:
       if (myLeds.allEqual()) {
@@ -49,6 +66,7 @@ void packageHandler(uint8_t comma, uint8_t data) {
 }
 
 void packageExtraHandler(uint8_t comma, uint8_t length) {
+  lcd_print(1,comma,length);
   switch (comma) {
     case 0:
       for (uint8_t i = 0; i < length; i++) {
@@ -99,12 +117,14 @@ void setup() {
   // INIT KEYPAD
   Keypad* myKeypad = new Keypad(makeKeymap(keymap),
                         new uint8_t[3]{ 4, 9, 12 }, new uint8_t[4]{ 7, 3, 2, 8 }, 3, 4);
-  myLocker = new LockHandler(13, A0, new uint8_t[2]{ A4, A5 },
+  myLocker = new LockHandler(13, A0, new uint8_t[2]{ A2, A3 },
                      myKeypad, "1234", 4, keymap[2][3]);
   myLocker->onAction(grantAccessFunc, LockHandler::GRANTACCESS);
   myLocker->onAction(revokeAccessFunc, LockHandler::REVOKEACCESS);
   myLocker->onAction(requestAccess, LockHandler::REQUESTACCESS);
   myLocker->onAction(requestAbort, LockHandler::REQUESTABORT);
+  lcd.init();  // Инициализация lcd               
+  lcd.backlight(); // Включаем подсветку 
 }
 
 void loop() {

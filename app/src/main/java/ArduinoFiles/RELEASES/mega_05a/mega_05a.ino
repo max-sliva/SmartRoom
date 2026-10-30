@@ -19,6 +19,9 @@ static boolean d_values[3] = {1,0,0};
 static boolean powerState = false;
 
 uint16_t findInterface(uint32_t serialNumber) {
+  if ((serialNumber == 65535) || (serialNumber == 0)) {
+    return -1;
+  }
   for (uint16_t i = 0; i < 4;i++) {
     if (interfaces[i]->getId()==serialNumber) {
       return i;
@@ -73,7 +76,7 @@ void packageHandler(uint8_t comma, uint8_t data) {
   switch (comma) {
     // COMMAND TO SEND LEDS VALUES TO ARD MINI
     case 0:
-      Serial.println("Case 0");
+      Serial.println(F("Case 0"));
       mySerial.resetDataArray();
       if (interfaces[0]->isEquals()) {
         mySerial.sendPackage(0,interfaces[0]->getValue(0));
@@ -87,11 +90,11 @@ void packageHandler(uint8_t comma, uint8_t data) {
       }
       break;
     case 9:
-      Serial.println("Case 9");
+      Serial.println(F("Case 9"));
       d_values[0] = data;
       break;
     case 10:
-      Serial.println("Case 10");
+      Serial.println(F("Case 10"));
       d_values[2] = true;
       if (myNex.currentPageId==4) {
         myNex.writeStr("vis t0,1");
@@ -150,7 +153,7 @@ void setup() {
   Serial2.begin(115200);    // Serial for connection to Arduino Mini by UART
   Serial3.begin(115200);    // Serial for NEXTION
   while (!(Serial && Serial2 && Serial3));
-  Serial.println("Serial was started");  
+  Serial.println(F("Serial was started"));  
   
   Interface43* i43 = static_cast<Interface43*>(interfaces[0]);
   i43->setSerial(&mySerial);
@@ -163,7 +166,7 @@ void setup() {
   i267->setElement(1,StvorkaElement(4,5,A5,590,200,200,16));
   Interface344* i344 = static_cast<Interface344*>(interfaces[3]);
   i344->setElement(0,FanElement(12,50));
-  Serial.println("Interfaces were filled");
+  Serial.println(F("Interfaces were filled"));
 
   pinMode(A0,INPUT);    // READ STATE OF POWER SWITCH PIN
   pinMode(52,OUTPUT);   // RELAY EXTERNAL POWER PIN
@@ -180,28 +183,38 @@ void loop() {
   mySerial.serialListen();
   if (digitalRead(A0) == LOW && powerState == true) {
     powerState = false;
-    Serial.println("Power turn off");
+    Serial.println(F("Power turn off"));
     digitalWrite(52,LOW);
     delay(1000);
     digitalWrite(53, HIGH);
   }
   if (digitalRead(A0) == HIGH && powerState == false) {
     powerState = true;
-    Serial.println("Power turn on");
+    Serial.println(F("Power turn on"));
     digitalWrite(53, LOW);
     digitalWrite(52, HIGH);
-    delay(100);
-    myNex.writeStr("page page_main_menu");
+    trigger0();
   }
   if (pageCurrent != myNex.currentPageId) {
     pageCurrent = myNex.currentPageId;
     Serial.print("---> On page: ");
     Serial.println(pageCurrent);
+    switch (pageCurrent) {
+      case 0:
+        trigger0();
+        break;
+      default:
+        break;
+    }
   }
 }
 
+void trigger0() {
+  myNex.writeStr("page page_main_menu");
+}
+
 void trigger1() {
-  Serial.print("Updated Interface: ");
+  Serial.print(F("Updated Interface: "));
   bufferInter = findInterface(myNex.readNumber("va0.val"));
   Serial.print(bufferInter);
   if (bufferInter == 65535) {
@@ -216,8 +229,22 @@ void trigger1() {
   interfaces[bufferInter]->setValue(index,value);
 }
 
+void trigger2() {
+  Serial.print(F("Quick Cast: "));
+  bufferInter = findInterface(myNex.readNumber("va0.val"));
+  if (bufferInter != -1) {
+    uint8_t value = myNex.readNumber("va1.val");
+    value *= myNex.readNumber("va2.val");
+    interfaces[bufferInter]->setValue(255,value);
+    Serial.println(value);
+  }
+  else {
+    Serial.println(-1);
+  }
+}
+
 void trigger4() {
-  Serial.println("Update door interface");
+  Serial.println(F("Update door interface"));
   myNex.writeNum("va0.val", d_values[1]);
   if (d_values[2] == HIGH) {
     myNex.writeStr("vis t0,1");
@@ -227,7 +254,7 @@ void trigger4() {
 }
 
 void trigger5() {
-  Serial.println("Update door");
+  Serial.println(F("Update door"));
   if (myNex.readNumber("va1.val")!=d_values[0]) {
     d_values[0] = !d_values[0];
     mySerial.sendPackage(10, d_values[0]);
@@ -235,7 +262,7 @@ void trigger5() {
 }
 
 void trigger6() {
-  Serial.println("Update Locker");
+  Serial.println(F("Update Locker"));
   if (myNex.readNumber("va2.val")!=d_values[1]) {
     d_values[1] = !d_values[1];
     mySerial.sendPackage(11, d_values[1]); 
@@ -243,7 +270,7 @@ void trigger6() {
 }
 
 void trigger7() {
-  Serial.println("Request answer");
+  Serial.println(F("Request answer"));
   if (myNex.readNumber("va2.val")!=d_values[2]) {
     d_values[2] = !d_values[2];
     mySerial.sendPackage(12, d_values[2]);
