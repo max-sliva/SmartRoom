@@ -11,6 +11,8 @@ private:
   char bufferChar;     // buffer char for this_keypad->getKey()
   char specialSymbol;  // special symbol on keymap
   uint8_t ledPins[2];  // pins for leds on lock panel
+  // ledPins[0] - ACCESS LED (GREEN)
+  // ledPins[1] - LOCKED LED (RED)
   // BUTTON PINS
   uint8_t butPinIn, butPinOut;
   // KEYPAD
