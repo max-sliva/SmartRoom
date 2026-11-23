@@ -12,5 +12,5 @@
 #include "classes/StvorkaElement.h"
 #include "classes/LedHandler.h"
 #include "classes/LockHandler.h"
-#include "classes/LockHandler.cpp"
+// #include "classes/LockHandler.cpp"
 #endif
