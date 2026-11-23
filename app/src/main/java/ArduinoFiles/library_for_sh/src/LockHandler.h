@@ -36,7 +36,7 @@ private:
   // Turns values of touchpad button to that boolean value
   void setButtonValue(boolean value);
   // Hash function, returns uint32_t hash value from char* str
-  uint32_t hashDJB2(char* str);
+  uint32_t hashDJB2(const char* str);
   /**
     Procedure that calls when Access granted by LockHandler,
     calls action GRANTACCESS if not nullptr
@@ -85,7 +85,7 @@ public:
         Constructor with fields
     */
   LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
-              char* password, uint8_t length, char _specialSymbol);
+              const char* password, uint8_t length, char _specialSymbol);
   /**
     Returns true if button is true OR keypad got Key pressed, otherwise false
   */

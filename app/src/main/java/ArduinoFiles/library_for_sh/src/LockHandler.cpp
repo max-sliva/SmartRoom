@@ -26,7 +26,7 @@
       digitalWrite(butPinIn, LOW);
     }
   }
-  uint32_t LockHandler::hashDJB2(char* str) {
+  uint32_t LockHandler::hashDJB2(const char* str) {
     uint32_t hash = 5381;
     int c;
     while ((c = *str++)) {
@@ -99,7 +99,7 @@
     }
   }
   LockHandler::LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
-              char* password, uint8_t length, char _specialSymbol) {
+              const char* password, uint8_t length, char _specialSymbol) {
     this_keypad = keypad;
     butPinIn = buttonPinIn;
     butPinOut = buttonPinOut;
