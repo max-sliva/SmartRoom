@@ -10,6 +10,7 @@
 #ifdef SMARTHOUSE_DEVICE_MINI
 #include "classes/CustomSerial.h"
 #include "classes/StvorkaElement.h"
+#include "classes/LedHandler.h"
 #include "classes/LockHandler.h"
 #include "classes/LockHandler.cpp"
 #endif

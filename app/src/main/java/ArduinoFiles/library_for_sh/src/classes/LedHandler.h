@@ -5,23 +5,25 @@
 #include <stdint.h>
 #include <Arduino.h>
 
-#define MAXNUMBEROFLEDS 8
+#define MAXNUMBEROFLEDS 16
 
 class LedHandler {
 private:
+
+  // buffers for change led value overtime
+  int16_t bufferArray[MAXNUMBEROFLEDS*2] = {0};
   // uint8_t number of posible connetcion Led Lines
   uint8_t numberOfConnections;
   // uint8_t array of pins, made dinamicly in constructor. Length array corresponds with numberOfConnections
   uint8_t arrayOfPins[MAXNUMBEROFLEDS];
   // uint8_t array of data which used in OUTPUT on pins, needed to request current brightness of leds
   uint8_t arrayOfData[MAXNUMBEROFLEDS];
-  // buffers for change led value overtime
-  int16_t* bufferArray;
+
 public:
+
   // Default constructor
   LedHandler() {
     numberOfConnections = 0;
-    bufferArray = nullptr;
   }
   // Constructor with fields
   LedHandler(uint8_t newNumberOfPins, uint8_t* newPins) {
@@ -35,11 +37,12 @@ public:
       pinMode(arrayOfPins[i], OUTPUT);
       setValue(i, 0xFF);
     }
-    bufferArray = new uint16_t[numberOfConnections * 2];
   }
+
   uint8_t getNumberOfConnetcion() {
     return numberOfConnections;
   }
+
   /**
     Returns value of arrayOfData[ledId] if ledId between 0 or numberOfConnections 
   */
@@ -88,11 +91,7 @@ public:
     }
     return 0;
   }
-  /**
-    Sets value of ALL leds to 'specific value' (first actually) that changing it over time 'ms'
-    used if all led values are equal
-  */
-  uint8_t setValueAllSync(uint8_t newValue, uint32_t ms) {
+  uint8_t setValueAll(uint8_t newValue, uint32_t ms) {
     if (bufferArray == nullptr) {
       return 1;
     }
@@ -102,6 +101,17 @@ public:
     if (ms == 0) {
       return setValueAll(newValue);
     }
+    if (allEqual()) {
+      return setValueAllSync(newValue, ms);
+    } else {
+      return setValueAllAsync(newValue,ms);
+    }
+  }
+  /**
+    Sets value of ALL leds to 'specific value' (first actually) that changing it over time 'ms'
+    used if all led values are equal
+  */
+  uint8_t setValueAllSync(uint8_t newValue, uint32_t ms) {
     for (uint8_t index = 1; index < numberOfConnections; index++) {
       arrayOfData[index] = arrayOfData[0];
     }
@@ -111,7 +121,7 @@ public:
     uint16_t ms_dx = ms / absDifference;
     for (uint16_t i = 0; i < absDifference; i++) {
       delay(ms_dx);
-      for (uint8_t index = 0; i < numberOfConnections; i++) {
+      for (uint8_t index = 0; index < numberOfConnections; index++) {
         arrayOfData[index] += value_dx;
         analogWrite(arrayOfPins[index], arrayOfData[index]);
       }
@@ -123,15 +133,6 @@ public:
     used if all led values are different 
   */
   uint8_t setValueAllAsync(uint8_t newValue, uint32_t ms) {
-    if (bufferArray == nullptr) {
-      return 1;
-    }
-    if (numberOfConnections == 1) {
-      return setValue(0, newValue, ms);
-    }
-    if (ms == 0) {
-      return setValueAll(newValue);
-    }
     int16_t buffer, maxLastDelay = 1;
     for (uint8_t i = 0; i < numberOfConnections; i++) {
       buffer = newValue - arrayOfData[i];

@@ -34,7 +34,7 @@ public:
       pinMode(arrayOfPins[i], OUTPUT);
       setValue(i, 0xFF);
     }
-    bufferArray = new uint16_t[numberOfConnections * 2];
+    bufferArray = new int16_t[numberOfConnections * 2];
   }
   uint8_t getNumberOfConnetcion() {
     return numberOfConnections;

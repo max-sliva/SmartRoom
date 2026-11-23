@@ -13,8 +13,8 @@ private:
   uint8_t buffer[2];
   uint8_t dataArray[LENGTHBUFFER];  // buffer dataArray
   uint32_t msBuffer;                // buffer
-  void (*packageFunc)(int8_t, uint8_t) = nullptr;
-  void (*extraFunc)(int8_t, uint8_t) = nullptr;
+  void (*packageFunc)(uint8_t, uint8_t) = nullptr;
+  void (*extraFunc)(uint8_t, uint8_t) = nullptr;
   /**
     Procedure that sends number of elements of dataArray by length to _serial
   */
