@@ -1,16 +1,15 @@
 #pragma once
 
 #ifdef SMARTHOUSE_DEVICE_MEGA
-#include "classes/CustomSerial.h"
-#include "classes/Interfaces.h"
-#include "classes/UsbListener.h"
-#include "libraries/DefaultNextion.h"
+#include "CustomSerial.h"
+#include "Interfaces.h"
+#include "UsbListener.h"
+#include <EasyNextionLibrary.h>
 #endif
 
 #ifdef SMARTHOUSE_DEVICE_MINI
-#include "classes/CustomSerial.h"
-#include "classes/StvorkaElement.h"
-#include "classes/LedHandler.h"
-#include "classes/LockHandler.h"
-// #include "classes/LockHandler.cpp"
+#include "CustomSerial.h"
+#include "StvorkaElement.h"
+#include "LedHandler.h"
+#include "LockHandler.h"
 #endif
