@@ -1,6 +1,4 @@
-#ifndef STVORKAELEMENT_H
 #include "StvorkaElement.h"
-#endif
 
 void StvorkaElement::setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
     openPin = _openPin;

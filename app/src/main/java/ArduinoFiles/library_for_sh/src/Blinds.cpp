@@ -1,6 +1,4 @@
-#ifndef BLINDS_H
 #include "Blinds.h"
-#endif
 
 Blinds::Blinds() {
   down_value = DEFAULT_DOWN;

@@ -1,3 +1,6 @@
+#ifndef USBLISTENER_H
+#define USBLISTENER_H
+
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -50,3 +53,5 @@ public:
   }
 
 };
+
+#endif
