@@ -6,12 +6,6 @@ void StvorkaElement::setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _value
     valuePin = _valuePin;
 }
 
-void StvorkaElement::setPinModes() {
-    pinMode(openPin,OUTPUT);
-    pinMode(closePin,OUTPUT);
-    pinMode(valuePin,INPUT);
-}
-
 void StvorkaElement::moveDirectTo(int16_t targetValue) {
     if (targetValue != updateValue()) {
       uint8_t highPin, lowPin;

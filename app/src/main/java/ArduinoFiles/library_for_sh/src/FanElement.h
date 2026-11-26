@@ -19,8 +19,12 @@ public:
     pin = _pin;
     value = 0;
     minPWMvalue = _minPWMvalue;
+  }
+
+  void init() {
     pinMode(pin, OUTPUT);
   }
+
   uint8_t getValue() {
     return value;
   }

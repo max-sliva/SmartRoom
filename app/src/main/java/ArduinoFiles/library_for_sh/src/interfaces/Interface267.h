@@ -37,6 +37,7 @@ public:
 
     void setElement(uint8_t index, const StvorkaElement& element) {
         _array[index] = element;
+        _array[index].init();
     }
 
     uint8_t getValue(uint8_t index) {

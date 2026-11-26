@@ -16,55 +16,75 @@ private:
   uint16_t closedValue;    //0 - 1023;
   uint16_t currentValue;   //0 - 1023;
 
+  /**
+    Sets pins for openning, closing, and getting current possition value (analog)
+  */
   void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin);
-  // Private procedure that sets all pinMode to pins
-  void setPinModes();
+
   /**
   *   Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
   */
   void moveDirectTo(int16_t targetValue);
 public:
+
   // Default constructor: WITHOUT PINMODES!!!
   StvorkaElement();
+
   // Constructor with fields: PINS
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin);
+
   // Consturctor with fields: PINS AND BOUNDARIES
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue);
+
   // Constructor will all fields
   StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue, uint8_t _power, uint8_t _tolerance);
+
   /**
     Initilisates all pins and all subAction on the start
     Needed to call before working in begin()
   */
   void init();
+
   // Set openedValue & closedValue
   void setBoundaries(uint16_t _openedValue, uint16_t _closedValue);
 
   void setConsts(uint8_t _power, uint8_t _tolerance);
+
   // Returns value from its potenciometer
   int16_t updateValue();
+
   // Returns value from its potenciometer when its different by value 'TOLERANCE'
   int16_t updateValueFine();
+
   // Returns raw currentValue
   uint16_t getCurrentValue();
+
   // Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
   uint8_t getValueInsideBoundaries(uint16_t value);
+
   // Function that returns any value type of uint8_t in the form uint16_t mapped by boundary values
   uint16_t getShortValue(uint8_t value);
+
   // Returns byte number of value that lays in boundaries
   uint8_t getByteValue(uint16_t value);
+
   // Returns true if value lays between opened & closed Values of stvorkaElement, else false;
   bool valueInsideBoundaries(int16_t value);
+
   /**
   *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
   */
   uint16_t moveRelativelyToByte(uint8_t procentValue);
+
   /**
   *   Procedures that turns stvorka to procent of opened position (uint16_t), returns value that actually opened to 
   */
   uint16_t moveRelativeToShort(uint16_t procentValue);
+
   // Metod that turn stvorka to opened position
+
   void openStvorka();
+  
   // Metod that turn stvorka to closed position
   void closeStvorka();
 };
