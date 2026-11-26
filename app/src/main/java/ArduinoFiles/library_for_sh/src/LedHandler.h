@@ -34,8 +34,13 @@ public:
     }
     for (uint8_t i = 0; i < numberOfConnections; i++) {
       arrayOfPins[i] = newPins[i];
-      pinMode(arrayOfPins[i], OUTPUT);
       setValue(i, 0xFF);
+    }
+  }
+  // initilisates pinModes, needed to call in begin() before using
+  void init() {
+    for (uint8_t i = 0; i < numberOfConnections; i++) {
+      pinMode(arrayOfPins[i], OUTPUT);
     }
   }
 

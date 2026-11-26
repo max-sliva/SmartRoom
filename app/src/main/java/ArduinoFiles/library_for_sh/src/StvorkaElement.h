@@ -15,151 +15,58 @@ private:
   uint16_t openedValue;    //0 - 1023;
   uint16_t closedValue;    //0 - 1023;
   uint16_t currentValue;   //0 - 1023;
-  void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin) {
-    openPin = _openPin;
-    closePin = _closePin;
-    valuePin = _valuePin;
-  }
+
+  void setPins(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin);
   // Private procedure that sets all pinMode to pins
-  void setPinModes() {
-    pinMode(openPin,OUTPUT);
-    pinMode(closePin,OUTPUT);
-    pinMode(valuePin,INPUT);
-  }
+  void setPinModes();
   /**
   *   Private procedure that turns stvorka to raw targetValue checked out by value from potenciometer
   */
-  void moveDirectTo(int16_t targetValue) {
-    if (targetValue != updateValue()) {
-      uint8_t highPin, lowPin;
-      if ((targetValue>currentValue)^(closedValue>openedValue)) {
-        highPin = openPin;
-        lowPin = closePin;
-      }
-      else {
-        highPin = closePin;
-        lowPin = openPin;
-      }
-      analogWrite(highPin, POWER);
-      digitalWrite(lowPin, LOW);
-      while (abs(targetValue-updateValue()) > TOLERANCE);
-      digitalWrite(highPin, LOW);
-    }
-  }
+  void moveDirectTo(int16_t targetValue);
 public:
   // Default constructor: WITHOUT PINMODES!!!
-  StvorkaElement() {
-    setPins(0,0,0);
-    setBoundaries(1023,0);
-    currentValue = 0;
-    setConsts(150,16);
-  }
+  StvorkaElement();
   // Constructor with fields: PINS
-  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin)
-   : StvorkaElement(_openPin, _closePin, _valuePin, 1023, 0, 150, 16) {
-   }
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin);
   // Consturctor with fields: PINS AND BOUNDARIES
-  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue)
-   : StvorkaElement(_openPin, _closePin, _valuePin, _openedValue, _closedValue, 150, 16) {
-   }
-
-  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue, uint8_t _power, uint8_t _tolerance) {
-    setPins(_openPin, _closePin, _valuePin);
-    setPinModes();
-    setBoundaries(_openedValue,_closedValue);
-    setConsts(_power,_tolerance);
-    updateValue();
-  }
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue);
+  // Constructor will all fields
+  StvorkaElement(uint8_t _openPin, uint8_t _closePin, uint8_t _valuePin, uint16_t _openedValue, uint16_t _closedValue, uint8_t _power, uint8_t _tolerance);
+  /**
+    Initilisates all pins and all subAction on the start
+    Needed to call before working in begin()
+  */
+  void init();
   // Set openedValue & closedValue
-  void setBoundaries(uint16_t _openedValue, uint16_t _closedValue) {
-    openedValue = _openedValue;
-    closedValue = _closedValue;
-  }
-  void setConsts(uint8_t _power, uint8_t _tolerance) {
-    POWER = _power;
-    TOLERANCE = _tolerance;
-  }
+  void setBoundaries(uint16_t _openedValue, uint16_t _closedValue);
+
+  void setConsts(uint8_t _power, uint8_t _tolerance);
   // Returns value from its potenciometer
-  int16_t updateValue() {
-    currentValue = analogRead(valuePin);
-    return currentValue;
-  }
+  int16_t updateValue();
   // Returns value from its potenciometer when its different by value 'TOLERANCE'
-  int16_t updateValueFine() {
-    uint16_t newValue = analogRead(valuePin);
-    if (abs(newValue - currentValue) > TOLERANCE) {
-        currentValue = newValue; 
-    }
-    return currentValue;
-  }
-  /**
-  *   Returns raw currentValue
-  */
-  uint16_t getCurrentValue() {
-    return currentValue;
-  }
-  /**
-  *   Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
-  */
-  uint8_t getValueInsideBoundaries(uint16_t value) {
-    //value & 0x3FF;     hard cast to 0 - 1023
-    return map(value & 0x3FF,0,1023,closedValue,openedValue);
-  }
-  /**
-  *   Function that returns any value type of uint8_t in the form uint16_t mapped by boundary values
-  */
-  uint16_t getShortValue(uint8_t value) {
-    return map(value,0,255,closedValue,openedValue);
-  }
+  int16_t updateValueFine();
+  // Returns raw currentValue
+  uint16_t getCurrentValue();
+  // Function that returns 'currentValue' in the form of uint8_t mapped by boundary values
+  uint8_t getValueInsideBoundaries(uint16_t value);
+  // Function that returns any value type of uint8_t in the form uint16_t mapped by boundary values
+  uint16_t getShortValue(uint8_t value);
   // Returns byte number of value that lays in boundaries
-  uint8_t getByteValue(uint16_t value) {
-    int8_t newValue = map(value,closedValue,openedValue,0,255);
-    return newValue;
-  }
-  /**
-   *  Returns true if value lays between opened & closed Values of stvorkaElement, else false;
-   */
-  bool valueInsideBoundaries(int16_t value) {
-      int16_t length1, length2;
-      length1 = abs((int16_t)openedValue - value);
-      length2 = abs((int16_t)closedValue - value);
-      int16_t result = (abs((int16_t)openedValue - (int16_t)closedValue) == (length1 + length2));
-      return result;
-    }
+  uint8_t getByteValue(uint16_t value);
+  // Returns true if value lays between opened & closed Values of stvorkaElement, else false;
+  bool valueInsideBoundaries(int16_t value);
   /**
   *   Procedures that turns stvorka to procent of opened position (uint8_t), returns value that actually opened to 
   */
-  uint16_t moveRelativelyToByte(uint8_t procentValue) {
-    uint16_t transformedValue = getShortValue(procentValue);
-    moveDirectTo(transformedValue);
-    return transformedValue;
-  }
+  uint16_t moveRelativelyToByte(uint8_t procentValue);
   /**
   *   Procedures that turns stvorka to procent of opened position (uint16_t), returns value that actually opened to 
   */
-  uint16_t moveRelativeToShort(uint16_t procentValue) {
-    uint16_t transformedValue = getValueInsideBoundaries(procentValue);
-    moveDirectTo(transformedValue);
-    return transformedValue;
-  }
+  uint16_t moveRelativeToShort(uint16_t procentValue);
   // Metod that turn stvorka to opened position
-  void openStvorka() {
-    if (valueInsideBoundaries(updateValue())) {
-      analogWrite(openPin, POWER);
-      digitalWrite(closePin, LOW);
-      while (abs((int16_t)openedValue - updateValue()) > TOLERANCE);
-      digitalWrite(openPin, LOW);
-    }
-  }
+  void openStvorka();
   // Metod that turn stvorka to closed position
-  void closeStvorka() {
-    if (valueInsideBoundaries(updateValue())) {
-      analogWrite(closePin, POWER);
-      digitalWrite(openPin, LOW);
-      while (abs((int16_t)closedValue - updateValue()) > TOLERANCE);
-      digitalWrite(closePin, LOW);
-    }
-  }
+  void closeStvorka();
 };
 
 #endif

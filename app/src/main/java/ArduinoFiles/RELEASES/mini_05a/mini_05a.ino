@@ -22,7 +22,7 @@ uint8_t mainLedPins[2] = {10,11},
         lockLeds[2] = {A2,A3};
 
 LedHandler myLeds(2, mainLedPins);
-StvorkaElement myDoor(5,6,A6);
+StvorkaElement myDoor(6,5,A6,160,500);
 Keypad lockNumpad(makeKeymap(keymap),
                   rows, columns,
                   3, 4);
@@ -92,9 +92,10 @@ void requestAbort() {
 }
 
 void setup() {
-  //MYDOOR STVORKAELEMENT BOUNDARIES
-  myDoor.setBoundaries(150, 495);
-  myDoor.closeStvorka();
+  // object inits
+  myDoor.init();
+  myLocker.init();
+  myLeds.init();
   // CUSTOM SERIAL
   mySerial.onPackage(packageHandler);
   mySerial.onPackageExtra(packageExtraHandler);
@@ -111,6 +112,8 @@ void setup() {
   myLocker.onAction(revokeAccessFunc, LockHandler::REVOKEACCESS);
   myLocker.onAction(requestAccess, LockHandler::REQUESTACCESS);
   myLocker.onAction(requestAbort, LockHandler::REQUESTABORT);
+  // close door
+  myDoor.closeStvorka();
 }
 
 void loop() {

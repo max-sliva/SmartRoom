@@ -11,6 +11,7 @@
     digitalWrite(ledPins[0], LOW);
     return countChar >= lengthOfPassword;
   }
+
   void LockHandler::resetPassword() {
     for (uint8_t i = 0; i < MAXLENGTHPASSWORD; i++) {
       password[i] = 0;
@@ -19,6 +20,7 @@
     countChar = 0;
     lockCounter = 0;
   }
+
   void LockHandler::setButtonValue(boolean value) {
     if (digitalRead(butPinOut) != value) {
       digitalWrite(butPinIn, HIGH);
@@ -26,6 +28,7 @@
       digitalWrite(butPinIn, LOW);
     }
   }
+
   uint32_t LockHandler::hashDJB2(const char* str) {
     uint32_t hash = 5381;
     int c;
@@ -34,14 +37,17 @@
     }
     return hash;
   }
+
   void LockHandler::onAction(void (*function)(), Actions action) {
     actionNodes[action] = function;
   }
+
   void LockHandler::callAction(Actions action) {
     if (actionNodes[action] != nullptr) {
       actionNodes[action]();
     }
   }
+
   void LockHandler::grantAccess() {
     locked = false;
     stateWritePass = false;
@@ -52,6 +58,7 @@
     callAction(GRANTACCESS);
     delay(500);
   }
+
   void LockHandler::revokeAccess() {
     locked = true;
     digitalWrite(ledPins[0],LOW);
@@ -59,6 +66,7 @@
     callAction(REVOKEACCESS);
     delay(500);
   }
+
   void LockHandler::repeatAccess() {
     digitalWrite(ledPins[0],LOW);
     delay(100);
@@ -66,6 +74,7 @@
     digitalWrite(ledPins[0],HIGH);
     delay(500);
   }
+
   void LockHandler::accessDenied() {
     resetPassword();
     setButtonValue(LOW);
@@ -75,12 +84,15 @@
     callAction(ACCESSDENIED);
     delay(500);
   }
+
   boolean LockHandler::getStateWritePass() {
     return stateWritePass;
   }
+  
   boolean LockHandler::getLockedState() {
     return locked;
   }
+
   void LockHandler::setLockedState(boolean value) {
     if (locked != value) {
       if (value == true) {
@@ -98,6 +110,7 @@
       }
     }
   }
+
   LockHandler::LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
               const char* password, uint8_t length, char _specialSymbol) {
     this_keypad = keypad;
@@ -111,7 +124,9 @@
     for (uint8_t i = 0; i < 7; i++) {
       actionNodes[i] = nullptr;
     }
+  }
 
+  void LockHandler::init() {
     pinMode(butPinIn, OUTPUT);
     pinMode(butPinOut, INPUT);
     pinMode(ledPins[0], OUTPUT);
@@ -121,15 +136,19 @@
     resetPassword();
     revokeAccess();
   }
+
   boolean LockHandler::checkInteraction() {
     return digitalRead(butPinOut) || getBufferChar();
   }
+
   boolean LockHandler::checkHashPassword(char* _password) {
     return hashPassword == hashDJB2(_password);
   }
+
   boolean LockHandler::checkHashPassword(uint32_t hash) {
     return hashPassword == hash;
   }
+
   boolean LockHandler::getBufferChar() {
     bufferChar = this_keypad->getKey();
     if (bufferChar != NO_KEY) {
@@ -137,6 +156,7 @@
     }
     return false;
   }
+
   void LockHandler::setPassword(char* newPassword, uint8_t length) {
     char bufferPassword[MAXLENGTHPASSWORD];
     for (uint8_t i = 0; (i < MAXLENGTHPASSWORD)&&(i < length); i++) {
@@ -152,6 +172,7 @@
     countChar = 0;
     stateWritePass = false;
   }
+
   int8_t LockHandler::lockListen() {
     if (locked) {
       if (stateWritePass == false) {

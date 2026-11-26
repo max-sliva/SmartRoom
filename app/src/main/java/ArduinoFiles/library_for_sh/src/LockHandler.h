@@ -87,6 +87,10 @@ public:
   LockHandler(uint8_t buttonPinIn, uint8_t buttonPinOut, uint8_t* _ledPins, Keypad* keypad,
               const char* password, uint8_t length, char _specialSymbol);
   /**
+    Initilisates all pins and all subAction on the start
+  */
+  void init();
+  /**
     Returns true if button is true OR keypad got Key pressed, otherwise false
   */
   boolean checkInteraction();
