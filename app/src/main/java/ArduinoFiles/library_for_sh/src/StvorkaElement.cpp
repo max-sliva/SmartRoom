@@ -85,9 +85,13 @@ uint16_t StvorkaElement::getShortValue(uint8_t value) {
     return map(value,0,255,closedValue,openedValue);
 }
 
+uint8_t StvorkaElement::getByteValue() {
+    return getByteValue(updateValue);
+}
+
+// THIS IS NOT A STATIC METHOD
 uint8_t StvorkaElement::getByteValue(uint16_t value) {
-    int8_t newValue = map(value,closedValue,openedValue,0,255);
-    return newValue;
+    return map(value,closedValue,openedValue,0,255);
 }
 
 bool StvorkaElement::valueInsideBoundaries(int16_t value) {

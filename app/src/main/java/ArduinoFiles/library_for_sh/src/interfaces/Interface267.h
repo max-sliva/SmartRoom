@@ -4,7 +4,7 @@
 #ifndef INTERFACE_H
 #include "Interface.h"
 #endif
-
+#include <Arduino.h>
 #include "../StvorkaElement.h"
 // INTERFACE FOR NEXTION -> MEGA STVORKAS
 class Interface267 : public Interface {
@@ -41,7 +41,7 @@ public:
     }
 
     uint8_t getValue(uint8_t index) {
-        return _array[index].getCurrentValue();
+        return _array[index].getByteValue();
     }
 };
 

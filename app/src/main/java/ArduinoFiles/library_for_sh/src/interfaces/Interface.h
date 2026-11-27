@@ -21,8 +21,28 @@ public:
 
     Interface(const uint16_t id, const uint8_t screen) : _id(id), _screen(screen) {}
     
-    // виртуальный деструктор 
+    /**
+        Virtual destructor for deleting arrays in extened classes
+    */
     virtual ~Interface() {}
+
+    /**
+        Writes Number of current values of this Interface to array
+        n - number of values to read
+        if n > length, in array will be written only length number of elements
+    */
+    uint8_t getValuesTo(uint8_t* array, uint8_t n) {
+        uint8_t numberToWrite;
+        if (n < _length) {
+            numberToWrite = n;
+        } else {
+            numberToWrite = _length;
+        }
+        for (uint8_t i = 0; i < numberToWrite; i++) {
+            array[i] = getValue(i);
+        }
+        return numberToWrite;
+    }
 
     uint16_t getId() { 
         return _id;
@@ -32,7 +52,7 @@ public:
         return _screen;
     }
 
-    virtual uint8_t length() {
+    uint8_t length() {
         return _length;
     }
 
@@ -40,7 +60,7 @@ public:
         return equalsFlag;
     }
 
-    virtual void setValue(uint8_t index, uint8_t value) {
+    void setValue(uint8_t index, uint8_t value) {
         if (index == 255) {
             setValueAll(value);
             equalsFlag = true;
